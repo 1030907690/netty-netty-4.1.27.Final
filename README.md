@@ -1,3 +1,19 @@
+1，github下载源码:https://github.com/netty/netty
+
+2，执行maven指令如下：
+
+    mvn install -DskipTests  -Dcheckstyle.skip=true
+
+3,编译之后，idea导入开发工具。
+
+可以执行如下指令： mvn idea:idea -DskipTests  -Dcheckstyle.skip=true
+    或者 mvn eclipse:eclipse -DskipTests  -Dcheckstyle.skip=true
+
+
+Error:java: Compilation failed: internal java compiler error
+
+解决办法很简单：File-->Setting...-->Build,Execution,Deployment-->Compiler-->Java Compiler 设置相应Module的target bytecode version的合适版本（跟你jkd版本一致），这里我改成1.8版本的。
+![1](version.png)
 # Netty Project
 
 Netty is an asynchronous event-driven network application framework for rapid development of maintainable high performance protocol servers & clients.
