@@ -22,10 +22,12 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
         //msg 可以接收到数据
 
 
-        System.out.println(" server received data " +msg);
+        System.out.println(" server received data " + msg);
 
         //获得消费者传过来的数据
-
+        ctx.write("response " + ((RpcRequest)msg).getName());
+        ctx.flush();
+        ctx.close();
 
 
     }

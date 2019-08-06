@@ -10,7 +10,6 @@ import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
-import io.netty.handler.timeout.IdleStateHandler;
 
 /**
  * @author Zhou Zhong Qing
@@ -22,7 +21,10 @@ import io.netty.handler.timeout.IdleStateHandler;
 public class NettyClient {
 
     public static void main(String[] args) {
+
+
         RpcRequest request = new RpcRequest();
+        request.setName("zhangsan");
         //socket netty连
         final RpcProxyHandler rpcProxyHandler = new RpcProxyHandler();
         String[] address = "127.0.0.1:8080".split(":");
@@ -37,14 +39,14 @@ public class NettyClient {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) {
                             ChannelPipeline pipeline = socketChannel.pipeline();
-                                pipeline.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(
-                                        Integer.MAX_VALUE, 0, 4, 0, 4
-                                ));
-                                pipeline.addLast("frameEncoder", new LengthFieldPrepender(4));
-                                pipeline.addLast("encoder", new ObjectEncoder());
-                                pipeline.addLast("decoder", new ObjectDecoder(Integer.MAX_VALUE
-                                        , ClassResolvers.cacheDisabled(null)
-                                ));
+                            pipeline.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(
+                                    Integer.MAX_VALUE, 0, 4, 0, 4
+                            ));
+                            pipeline.addLast("frameEncoder", new LengthFieldPrepender(4));
+                            pipeline.addLast("encoder", new ObjectEncoder());
+                            pipeline.addLast("decoder", new ObjectDecoder(Integer.MAX_VALUE
+                                    , ClassResolvers.cacheDisabled(null)
+                            ));
 
                             pipeline.addLast(rpcProxyHandler);
                         }
@@ -60,5 +62,6 @@ public class NettyClient {
         } finally {
             group.shutdownGracefully();
         }
+
     }
 }

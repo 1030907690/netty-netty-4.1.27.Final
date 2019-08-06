@@ -61,11 +61,12 @@ public class NettyServer {
 
             }).option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
             //netty 监听
-            String[] addrs = "127.0.0.1:8080".split(":");
+            String serviceAddress = "127.0.0.1:8080";
+            String[] addrs = serviceAddress.split(":");
             String ip = addrs[0];
             int port = Integer.parseInt(addrs[1]);
             ChannelFuture future = bootstrap.bind(ip, port).sync();
-            //  logger.info("接口服务启动成功，等待客户端连接...[ {} ]", serviceAddress);
+            System.out.println("接口服务启动成功，等待客户端连接...[ "+ serviceAddress + "]");
             //使用sync方法进行阻塞，等待服务端链路关闭之后Main函数才退出
             future.channel().closeFuture().sync();
             //  logger.info("服务关闭 [ {} ]", serviceAddress);
