@@ -1,5 +1,6 @@
 package com.zzq.core.test;
 
+import com.alibaba.fastjson.JSONObject;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.slf4j.Logger;
@@ -22,8 +23,7 @@ public class RpcProxyHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        System.out.println("client received  data "+ msg );
-
+        System.out.println("client received  data "+ JSONObject.toJSONString(msg));
 
     }
 

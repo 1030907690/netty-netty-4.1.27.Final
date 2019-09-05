@@ -1,4 +1,4 @@
-package com.zzq.core.test;
+package com.zzq.core.test.bean;
 
 import java.io.Serializable;
 

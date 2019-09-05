@@ -1,8 +1,10 @@
 package com.zzq.core.test;
 
+import com.alibaba.fastjson.JSONObject;
+import com.zzq.core.test.bean.RpcRequest;
+import com.zzq.core.test.bean.RpcResponse;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-
 
 
 import java.util.Map;
@@ -22,10 +24,14 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
         //msg 可以接收到数据
 
 
-        System.out.println(" server received data " + msg);
+        System.out.println(" server received data " + JSONObject.toJSONString(msg));
 
         //获得消费者传过来的数据
-        ctx.write("response " + ((RpcRequest)msg).getName());
+
+        // 发送数据给客户端
+        RpcResponse rpcResponse = new RpcResponse();
+        rpcResponse.setResult("response " + JSONObject.toJSONString(msg));
+        ctx.write(rpcResponse);
         ctx.flush();
         ctx.close();
 
@@ -37,7 +43,6 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
         // Close the connection when an exception is raised.
         ctx.close();
     }
-
 
 
 }
