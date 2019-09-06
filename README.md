@@ -12,8 +12,12 @@
 
 Error:java: Compilation failed: internal java compiler error
 
-解决办法很简单：File-->Setting...-->Build,Execution,Deployment-->Compiler-->Java Compiler 设置相应Module的target bytecode version的合适版本（跟你jdk版本一致），这里我改成1.8版本的。
+解决办法很简单：第一种办法: File-->Setting...-->Build,Execution,Deployment-->Compiler-->Java Compiler 设置相应Module的target bytecode version的合适版本（跟你jdk版本一致），这里我改成1.8版本的。
 ![1](version.png)
+
+第二种办法:最外层的pom.xml 把这个换成自己的jdk版本
+  <maven.compiler.source>1.6</maven.compiler.source>
+  <maven.compiler.target>1.6</maven.compiler.target>
 # Netty Project
 
 Netty is an asynchronous event-driven network application framework for rapid development of maintainable high performance protocol servers & clients.

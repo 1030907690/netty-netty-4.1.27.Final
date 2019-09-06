@@ -307,6 +307,7 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
      */
     static void fireChannelRead(ChannelHandlerContext ctx, CodecOutputList msgs, int numElements) {
         for (int i = 0; i < numElements; i ++) {
+            // 获取数据传入到channelRead方法
             ctx.fireChannelRead(msgs.getUnsafe(i));
         }
     }
