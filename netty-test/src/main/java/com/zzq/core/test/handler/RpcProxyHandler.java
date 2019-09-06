@@ -1,4 +1,4 @@
-package com.zzq.core.test;
+package com.zzq.core.test.handler;
 
 import com.alibaba.fastjson.JSONObject;
 import io.netty.channel.ChannelHandlerContext;

@@ -1,6 +1,7 @@
 package com.zzq.core.test;
 
 import com.zzq.core.test.bean.RpcRequest;
+import com.zzq.core.test.handler.RpcProxyHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
