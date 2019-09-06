@@ -1,7 +1,6 @@
 package com.zzq.core.test.handler;
 
 import com.alibaba.fastjson.JSONObject;
-import com.zzq.core.test.bean.RpcRequest;
 import com.zzq.core.test.bean.RpcResponse;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;

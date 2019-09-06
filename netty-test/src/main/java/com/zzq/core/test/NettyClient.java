@@ -1,6 +1,8 @@
 package com.zzq.core.test;
 
 import com.zzq.core.test.bean.RpcRequest;
+import com.zzq.core.test.bean.RpcRequestParams;
+import com.zzq.core.test.bean.User;
 import com.zzq.core.test.handler.RpcProxyHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
@@ -12,6 +14,9 @@ import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * @author Zhou Zhong Qing
@@ -25,8 +30,19 @@ public class NettyClient {
     public static void main(String[] args) {
 
 
-        RpcRequest request = new RpcRequest();
+        RpcRequestParams request = new RpcRequestParams();
         request.setName("zhangsan");
+        User user = new User();
+        user.setId(1);
+        user.setName("user zhangsan");
+        request.setUser(user);
+
+        request.setParams(new HashMap<String,String>(){{put("param1","test");}});
+        request.setUserList(new ArrayList<User>(){{add(user);}});
+
+        RpcRequest rpcRequest = new RpcRequest();
+        rpcRequest.setParams(new Object[]{request});
+        rpcRequest.setTypes(new Class[]{request.getClass()                 });
         //socket netty连
         final RpcProxyHandler rpcProxyHandler = new RpcProxyHandler();
         String[] address = "127.0.0.1:8080".split(":");

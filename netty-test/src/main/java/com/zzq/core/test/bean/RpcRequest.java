@@ -2,22 +2,45 @@ package com.zzq.core.test.bean;
 
 import java.io.Serializable;
 
-/**
- * @author Zhou Zhong Qing
- * @Title: ${file_name}
- * @Package ${package_name}
- * @Description: ${todo}
- * @date 2019/8/614:56
- */
-public class RpcRequest implements Serializable{
+public class RpcRequest implements Serializable {
 
-    private String name;
 
-    public String getName() {
-        return name;
+    private String className;
+    private String methodName;
+
+    private Class<?> [] types;
+
+    private Object [] params;
+
+    public String getClassName() {
+        return className;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public String getMethodName() {
+        return methodName;
+    }
+
+    public void setMethodName(String methodName) {
+        this.methodName = methodName;
+    }
+
+    public Class<?>[] getTypes() {
+        return types;
+    }
+
+    public void setTypes(Class<?>[] types) {
+        this.types = types;
+    }
+
+    public Object[] getParams() {
+        return params;
+    }
+
+    public void setParams(Object[] params) {
+        this.params = params;
     }
 }
