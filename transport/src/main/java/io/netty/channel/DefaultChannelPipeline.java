@@ -634,6 +634,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             // We must call setAddComplete before calling handlerAdded. Otherwise if the handlerAdded method generates
             // any pipeline events ctx.handler() will miss them because the state will not allow it.
             ctx.setAddComplete();
+            // 添加自定义的handle
             ctx.handler().handlerAdded(ctx);
         } catch (Throwable t) {
             boolean removed = false;
@@ -1482,6 +1483,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         @Override
         void execute() {
+            // executor是NioEventLoop
             EventExecutor executor = ctx.executor();
             if (executor.inEventLoop()) {
                 callHandlerAdded0(ctx);

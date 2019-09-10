@@ -42,7 +42,9 @@ public class NettyClient {
 
         RpcRequest rpcRequest = new RpcRequest();
         rpcRequest.setParams(new Object[]{request});
-        rpcRequest.setTypes(new Class[]{request.getClass()                 });
+        rpcRequest.setTypes(new Class[]{request.getClass()});
+        rpcRequest.setClassName(NettyClient.class.getName());
+        rpcRequest.setMethodName("method");
         //socket netty连
         final RpcProxyHandler rpcProxyHandler = new RpcProxyHandler();
         String[] address = "127.0.0.1:8080".split(":");
@@ -71,7 +73,7 @@ public class NettyClient {
                     });
             //System.out.println("host " + host + " prot " + port);
             ChannelFuture future = b.connect(host, port).sync();
-            future.channel().writeAndFlush(request);
+            future.channel().writeAndFlush(rpcRequest);
             future.channel().closeFuture().sync();
 
 

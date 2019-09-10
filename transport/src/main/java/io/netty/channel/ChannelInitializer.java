@@ -99,6 +99,7 @@ public abstract class ChannelInitializer<C extends Channel> extends ChannelInbou
      */
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+        // 判断是否已注册
         if (ctx.channel().isRegistered()) {
             // This should always be true with our current DefaultChannelPipeline implementation.
             // The good thing about calling initChannel(...) in handlerAdded(...) is that there will be no ordering
@@ -112,6 +113,7 @@ public abstract class ChannelInitializer<C extends Channel> extends ChannelInbou
     private boolean initChannel(ChannelHandlerContext ctx) throws Exception {
         if (initMap.putIfAbsent(ctx, Boolean.TRUE) == null) { // Guard against re-entrance.
             try {
+                // 初始化通道
                 initChannel((C) ctx.channel());
             } catch (Throwable cause) {
                 // Explicitly call exceptionCaught(...) as we removed the handler before calling initChannel(...).
