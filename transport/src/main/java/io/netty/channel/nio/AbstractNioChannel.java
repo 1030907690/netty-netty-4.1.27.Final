@@ -83,8 +83,10 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
         super(parent);
         this.ch = ch;
+        // 这里的 readInterestOp 即前面层层传入的 SelectionKey.OP_ACCEPT
         this.readInterestOp = readInterestOp;
         try {
+            //设置该channel为非阻塞模式，标准的jdk nio编程的玩法
             ch.configureBlocking(false);
         } catch (IOException e) {
             try {

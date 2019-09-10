@@ -207,8 +207,9 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * Validate all the parameters. Sub-classes may override this, but should
      * call the super method in that case.
      */
+    //函数功能：检查相关参数是否设置了
     public B validate() {
-        if (group == null) {
+        if (group == null) { //这里的group指的是：b.group(bossGroup, workerGroup)代码中的bossGroup
             throw new IllegalStateException("group not set");
         }
         if (channelFactory == null) {
@@ -271,6 +272,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * Create a new {@link Channel} and bind it.
      */
     public ChannelFuture bind(SocketAddress localAddress) {
+        // 校验必要参数
         validate();
         if (localAddress == null) {
             throw new NullPointerException("localAddress");
@@ -317,6 +319,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {
+            // channelFactory是ReflectiveChannelFactory ;反射初始化NioServerSocketChannel
             channel = channelFactory.newChannel();
             init(channel);
         } catch (Throwable t) {
