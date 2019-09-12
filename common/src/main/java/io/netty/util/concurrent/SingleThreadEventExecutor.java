@@ -761,7 +761,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             throw new NullPointerException("task");
         }
 
-        boolean inEventLoop = inEventLoop();
+        boolean inEventLoop = inEventLoop();//判断当前线程是否为该NioEventLoop所关联的线程
         addTask(task);
         if (!inEventLoop) {
             startThread();

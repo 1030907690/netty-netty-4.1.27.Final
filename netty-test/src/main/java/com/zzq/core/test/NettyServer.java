@@ -35,7 +35,7 @@ public class NettyServer {
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(boosGroup, workerGroup);
             bootstrap.channel(NioServerSocketChannel.class);
-
+            // bootstrap.handler(new RpcServerHandler(new HashMap<>()));
             //springmvc web.xml
             bootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
 

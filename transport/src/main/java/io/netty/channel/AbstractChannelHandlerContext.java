@@ -146,7 +146,7 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
     private void invokeChannelRegistered() {
         if (invokeHandler()) {
             try {
-                ((ChannelInboundHandler) handler()).channelRegistered(this);
+                ((ChannelInboundHandler) handler()).channelRegistered(this); //调用我们自己写的Handler然后通过.handler设置后Handler
             } catch (Throwable t) {
                 notifyHandlerException(t);
             }

@@ -466,6 +466,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             if (eventLoop == null) {
                 throw new NullPointerException("eventLoop");
             }
+            //判断该channel是否已经被注册到EventLoop中
             if (isRegistered()) {
                 promise.setFailure(new IllegalStateException("registered to an event loop already"));
                 return;
@@ -476,16 +477,17 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 return;
             }
 
+            //1 将eventLoop设置在NioServerSocketChannel上
             AbstractChannel.this.eventLoop = eventLoop;
 
-            if (eventLoop.inEventLoop()) {
+            if (eventLoop.inEventLoop()) { //判断当前线程是否为该EventLoop中拥有的线程，如果是，则直接注册，如果不是，则添加一个任务到该线程中
                 register0(promise);
             } else {
                 try {
-                    eventLoop.execute(new Runnable() {
+                    eventLoop.execute(new Runnable() { //重点
                         @Override
                         public void run() {
-                            register0(promise);
+                            register0(promise);//分析
                         }
                     });
                 } catch (Throwable t) {
@@ -507,6 +509,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                     return;
                 }
                 boolean firstRegistration = neverRegistered;
+                // 调用doRegister()方法完成NioServerSocketChannel的注册
                 doRegister();
                 neverRegistered = false;
                 registered = true;
@@ -516,7 +519,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 pipeline.invokeHandlerAddedIfNeeded();
 
                 safeSetSuccess(promise);
-                pipeline.fireChannelRegistered();
+                pipeline.fireChannelRegistered(); //执行完，控制台输出：channelRegistered
                 // Only fire a channelActive if the channel has never been registered. This prevents firing
                 // multiple channel actives if the channel is deregistered and re-registered.
                 if (isActive()) {

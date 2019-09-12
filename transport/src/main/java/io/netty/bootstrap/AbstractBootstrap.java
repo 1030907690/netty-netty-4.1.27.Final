@@ -281,12 +281,15 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     private ChannelFuture doBind(final SocketAddress localAddress) {
+        // 1、通过initAndRegister()方法得到一个ChannelFuture的实例regFuture。
         final ChannelFuture regFuture = initAndRegister();
         final Channel channel = regFuture.channel();
+        //2、通过regFuture.cause()方法判断是否在执行initAndRegister方法时产生来异常。如果产生来异常，则直接返回，如果没有产生异常则进行第3步
         if (regFuture.cause() != null) {
             return regFuture;
         }
 
+        //3、通过regFuture.isDone()来判断initAndRegister方法是否执行完毕，如果执行完毕来返回true，然后调用doBind0进行socket绑定。如果没有执行完毕则返回false进行第4步
         if (regFuture.isDone()) {
             // At this point we know that the registration was complete and successful.
             ChannelPromise promise = channel.newPromise();
@@ -295,6 +298,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         } else {
             // Registration future is almost always fulfilled already, but just in case it's not.
             final PendingRegistrationPromise promise = new PendingRegistrationPromise(channel);
+            //4、regFuture会添加一个ChannelFutureListener监听，当initAndRegister执行完成时，调用operationComplete方法并执行doBind0进行socket绑定。
             regFuture.addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
@@ -316,10 +320,19 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         }
     }
 
+
+    /***
+     1、通过反射产生了一个NioServerSocketChannle对象。
+     2、完成了初始化
+     3、将NioServerSocketChannel进行了注册。
+     * */
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {
             // channelFactory是ReflectiveChannelFactory ;反射初始化NioServerSocketChannel
+            /*结论：final Channel channel = channelFactory().newChannel();这行代码的作用为通过反射产生来一个NioServerSocketChannel类的实例，
+            其中这个NioServerSocketChannel类对象有这样几个属性：SocketChannel、NioServerSocketChannelConfig 、SelectionKey.OP_ACCEPT事件、
+            NioMessageUnsafe、DefaultChannelPipeline*/
             channel = channelFactory.newChannel();
             init(channel);
         } catch (Throwable t) {
@@ -366,6 +379,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             @Override
             public void run() {
                 if (regFuture.isSuccess()) {
+                    //实现channel与端口的绑定
                     channel.bind(localAddress, promise).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
                 } else {
                     promise.setFailure(regFuture.cause());
@@ -459,6 +473,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     private static void setChannelOption(
             Channel channel, ChannelOption<?> option, Object value, InternalLogger logger) {
         try {
+            //如果没有设置 ,设置channel的options
             if (!channel.config().setOption((ChannelOption<Object>) option, value)) {
                 logger.warn("Unknown channel option '{}' for channel '{}'", option, channel);
             }

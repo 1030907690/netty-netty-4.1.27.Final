@@ -1279,7 +1279,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
 
         @Override
-        public void channelRegistered(ChannelHandlerContext ctx) throws Exception { }
+        public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+            System.out.println("执行TailContext#channelRegistered方法");
+        }
 
         @Override
         public void channelUnregistered(ChannelHandlerContext ctx) throws Exception { }
