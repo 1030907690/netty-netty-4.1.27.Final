@@ -541,6 +541,9 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             }
         }
 
+        /*
+        * 绑定端口
+        * */
         @Override
         public final void bind(final SocketAddress localAddress, final ChannelPromise promise) {
             assertEventLoop();
@@ -562,8 +565,10 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                         "address (" + localAddress + ") anyway as requested.");
             }
 
+            // 判断是否已绑定端口 在绑定之前，isActive()方法返回false，绑定之后返回true。
             boolean wasActive = isActive();
             try {
+                // 核心代码
                 doBind(localAddress);
             } catch (Throwable t) {
                 safeSetFailure(promise, t);
