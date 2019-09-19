@@ -96,7 +96,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         tail = new TailContext(this);
         head = new HeadContext(this);
-
+        //首先将与之关联的Channel保存在属性channel中，然后实例化了两个对象：一个是TailContext 实例tail，一个是HeadContext 实例 head。然后将head和tail相互指向，构成了一个双向链表。
         head.next = tail;
         tail.prev = head;
     }
@@ -1302,7 +1302,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
 
         @Override
-        public void handlerAdded(ChannelHandlerContext ctx) throws Exception { }
+        public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+            System.out.println("执行TailContext#handlerAdded方法");
+        }
 
         @Override
         public void handlerRemoved(ChannelHandlerContext ctx) throws Exception { }

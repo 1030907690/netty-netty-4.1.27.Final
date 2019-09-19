@@ -1,6 +1,7 @@
 package com.zzq.core.test;
 
 import com.zzq.core.test.handler.RpcServerHandler;
+import com.zzq.core.test.handler.SimpleServerHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -35,7 +36,7 @@ public class NettyServer {
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(boosGroup, workerGroup);
             bootstrap.channel(NioServerSocketChannel.class);
-            // bootstrap.handler(new RpcServerHandler(new HashMap<>()));
+            bootstrap.handler(new SimpleServerHandler());
             //springmvc web.xml
             bootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
 
