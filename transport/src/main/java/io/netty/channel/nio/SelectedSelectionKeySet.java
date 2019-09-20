@@ -20,6 +20,7 @@ import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Iterator;
 
+// 用SelectedSelectionKeySet替换selector底层的HashSet实现
 final class SelectedSelectionKeySet extends AbstractSet<SelectionKey> {
 
     SelectionKey[] keys;
@@ -37,6 +38,7 @@ final class SelectedSelectionKeySet extends AbstractSet<SelectionKey> {
 
         keys[size++] = o;
         if (size == keys.length) {
+            // 扩容
             increaseCapacity();
         }
 

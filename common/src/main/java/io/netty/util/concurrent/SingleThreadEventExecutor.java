@@ -390,6 +390,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      * the tasks in the task queue and returns if it ran longer than {@code timeoutNanos}.
      */
     protected boolean runAllTasks(long timeoutNanos) {
+        // 定时任务中聚合任务
         fetchFromScheduledTaskQueue();
         Runnable task = pollTask();
         if (task == null) {
@@ -764,6 +765,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         boolean inEventLoop = inEventLoop();//判断当前线程是否为该NioEventLoop所关联的线程
         addTask(task);
         if (!inEventLoop) {
+            // 启动线程
             startThread();
             if (isShutdown() && removeTask(task)) {
                 reject();
@@ -881,6 +883,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                 boolean success = false;
                 updateLastExecutionTime();
                 try {
+                    //  这里其实是调用子类NioEventLoop#run方法
                     SingleThreadEventExecutor.this.run();
                     success = true;
                 } catch (Throwable t) {
