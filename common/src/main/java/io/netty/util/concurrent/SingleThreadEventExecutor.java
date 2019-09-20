@@ -274,6 +274,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         long nanoTime = AbstractScheduledEventExecutor.nanoTime();
         Runnable scheduledTask  = pollScheduledTask(nanoTime);
         while (scheduledTask != null) {
+            //把定时任务的task聚合到普通队列的taskQueue里面
             if (!taskQueue.offer(scheduledTask)) {
                 // No space left in the task queue add it back to the scheduledTaskQueue so we pick it up again.
                 scheduledTaskQueue().add((ScheduledFutureTask<?>) scheduledTask);
@@ -392,6 +393,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     protected boolean runAllTasks(long timeoutNanos) {
         // 定时任务中聚合任务
         fetchFromScheduledTaskQueue();
+        // 取出task
         Runnable task = pollTask();
         if (task == null) {
             afterRunningAllTasks();

@@ -50,8 +50,10 @@ public class DefaultSocketChannelConfig extends DefaultChannelConfig
         this.javaSocket = javaSocket;
 
         // Enable TCP_NODELAY by default if possible.
+        // 判断平台  是否是Android
         if (PlatformDependent.canEnableTcpNoDelayByDefault()) {
             try {
+                //禁止Nagle算法
                 setTcpNoDelay(true);
             } catch (Exception e) {
                 // Ignore.

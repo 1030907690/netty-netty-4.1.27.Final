@@ -90,6 +90,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
             ch.configureBlocking(false);
         } catch (IOException e) {
             try {
+                // 如果出现异常则关闭
                 ch.close();
             } catch (IOException e2) {
                 if (logger.isWarnEnabled()) {

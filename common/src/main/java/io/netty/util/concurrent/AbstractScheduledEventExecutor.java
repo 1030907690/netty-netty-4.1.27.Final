@@ -108,6 +108,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
         }
 
         if (scheduledTask.deadlineNanos() <= nanoTime) {
+            //事件还未到，不执行
             scheduledTaskQueue.remove();
             return scheduledTask;
         }
