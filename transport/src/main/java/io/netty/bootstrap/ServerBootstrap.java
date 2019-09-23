@@ -133,6 +133,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         if (childHandler == null) {
             throw new NullPointerException("childHandler");
         }
+        // 设置childHandler
         this.childHandler = childHandler;
         return this;
     }
@@ -251,15 +252,19 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
             final Channel child = (Channel) msg;
 
+            // 添加channelHandler，由server端的bootstrap.childHandler方法
             child.pipeline().addLast(childHandler);
 
+            // 设置 options 选项  childOption方法设置进来的
             setChannelOptions(child, childOptions, logger);
 
+            //设置attrs ,如绑定一些密钥相关的信息
             for (Entry<AttributeKey<?>, Object> e : childAttrs) {
                 child.attr((AttributeKey<Object>) e.getKey()).set(e.getValue());
             }
 
             try {
+                //childGroup是NioEventLoopGroup  ,选择NioEventLoopGroup并注册selector
                 childGroup.register(child).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
