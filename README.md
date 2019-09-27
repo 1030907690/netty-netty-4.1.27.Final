@@ -29,7 +29,11 @@ Error:java: Compilation failed: internal java compiler error
   > 判断select所花费的时间,如果是很快执行完,这样的现象如果达到512次(默认的次数),则重建一个select,把旧的select有效属性赋值到新的select,最后替换select。
   - netty如何保证异步串行无锁化?
   > 通过inEventLoop()判断如果是外部线程,则把操作封装成task放到MpscQueue里,后面会被挨个执行。
-  
+- 2、netty新连接接入处理总结
+  - netty是在哪里检测有新连接接入的?
+  > boos线程轮询出accept事件,通过jdk底层的accept方法创建这条连接。
+  - 新连接是怎样注册到NioEventLoop线程的?
+  > boos线程调用chooser(PowerOfTwoEventExecutorChooser或者GenericEventExecutorChooser)的next方法拿到一个NioEventLoop,将这条连接注册到NioEventLoop的select上去。
   
   
   
