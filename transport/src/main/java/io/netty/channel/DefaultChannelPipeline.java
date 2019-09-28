@@ -207,6 +207,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         synchronized (this) {
             checkMultiplicity(handler);
 
+            // 创建channelHandlerContext
             newCtx = newContext(group, filterName(name, handler), handler);
 
             addLast0(newCtx);
@@ -236,11 +237,17 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return this;
     }
 
+    /*把newCtx插入到链表取 ，放到tail节点上一个(即倒数第二个节点),串起来*/
     private void addLast0(AbstractChannelHandlerContext newCtx) {
+        // 拿到tail节点的前面一个节点
         AbstractChannelHandlerContext prev = tail.prev;
+        // 新节点前面一个节点是上面的prev
         newCtx.prev = prev;
+        //新节点下一个就是最后一个节点,tail
         newCtx.next = tail;
+        // 之前的倒数第二个节点(现在是倒数第三个),下一个节点是新节点
         prev.next = newCtx;
+        // 最后一个节点的上一个节点设置为新节点
         tail.prev = newCtx;
     }
 
@@ -295,10 +302,15 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         ctx.prev = newCtx;
     }
 
+    /***
+     * 过滤名字
+     * */
     private String filterName(String name, ChannelHandler handler) {
         if (name == null) {
+            // 如果为null则生成
             return generateName(handler);
         }
+        // 检查是否有重复的名字
         checkDuplicateName(name);
         return name;
     }
@@ -391,6 +403,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return addLast(null, handler);
     }
 
+    /***
+     * 添加handler
+     * */
     @Override
     public final ChannelPipeline addLast(ChannelHandler... handlers) {
         return addLast(null, handlers);
@@ -618,8 +633,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     private static void checkMultiplicity(ChannelHandler handler) {
+        // 判断handler 是否是ChannelHandlerAdapter实例
         if (handler instanceof ChannelHandlerAdapter) {
             ChannelHandlerAdapter h = (ChannelHandlerAdapter) handler;
+            // 判断handler是否是可共享和是否已添加
             if (!h.isSharable() && h.added) {
                 throw new ChannelPipelineException(
                         h.getClass().getName() +
@@ -1186,6 +1203,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
      */
     protected void onUnhandledInboundException(Throwable cause) {
         try {
+            // 打印信息，异常没有被捕获
             logger.warn(
                     "An exceptionCaught() event was fired, and it reached at the tail of the pipeline. " +
                             "It usually means the last handler in the pipeline did not handle the exception.",
@@ -1216,6 +1234,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
      */
     protected void onUnhandledInboundMessage(Object msg) {
         try {
+            // 打印信息，提示消息没有做处理
             logger.debug(
                     "Discarded inbound message {} that reached at the tail of the pipeline. " +
                             "Please check your pipeline configuration.", msg);
@@ -1265,6 +1284,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
+    /***
+     * 做一些收尾的事情
+     * */
     // A special catch-all handler that handles both bytes and messages.
     final class TailContext extends AbstractChannelHandlerContext implements ChannelInboundHandler {
 
@@ -1424,8 +1446,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         @Override
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
+            // 传播
             ctx.fireChannelActive();
 
+            // 注册读事件
             readIfIsAutoRead();
         }
 
