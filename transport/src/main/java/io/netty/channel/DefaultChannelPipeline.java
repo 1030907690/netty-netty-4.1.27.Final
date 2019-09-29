@@ -222,17 +222,20 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             }
 
             EventExecutor executor = newCtx.executor();
+            //判断是否在当前线程
             if (!executor.inEventLoop()) {
                 newCtx.setAddPending();
                 executor.execute(new Runnable() {
                     @Override
                     public void run() {
+                        // 添加pipeline的回调
                         callHandlerAdded0(newCtx);
                     }
                 });
                 return this;
             }
         }
+        // 如果是在当前线程,直接添加pipeline的回调
         callHandlerAdded0(newCtx);
         return this;
     }
@@ -455,6 +458,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return StringUtil.simpleClassName(handlerType) + "#0";
     }
 
+    /***
+     *
+     *删除channelHandler
+     * */
     @Override
     public final ChannelPipeline remove(ChannelHandler handler) {
         remove(getContextOrDie(handler));
@@ -493,9 +500,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     private AbstractChannelHandlerContext remove(final AbstractChannelHandlerContext ctx) {
+        // 断言当前要删除的节点不是head也不是tail
         assert ctx != head && ctx != tail;
 
         synchronized (this) {
+            // 删除节点
             remove0(ctx);
 
             // If the registered is false it means that the channel was not registered on an eventloop yet.
@@ -507,6 +516,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             }
 
             EventExecutor executor = ctx.executor();
+            // 判断是否在本线程
             if (!executor.inEventLoop()) {
                 executor.execute(new Runnable() {
                     @Override
@@ -521,10 +531,17 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return ctx;
     }
 
+    /**
+     * 剔除当前节点 ，把当前节点的上一个节点和下一个节点串起来
+     * */
     private static void remove0(AbstractChannelHandlerContext ctx) {
+        // 拿到当前节点的上一个节点
         AbstractChannelHandlerContext prev = ctx.prev;
+        // 拿到当前节点的下一个节点
         AbstractChannelHandlerContext next = ctx.next;
+        // 当前节点的上一个节点 的下一个节点直接赋值为当前节点的下一个节点
         prev.next = next;
+        // 当前节点的下一个节点 上一个节点 直接赋值为当前节点的上一个节点
         next.prev = prev;
     }
 
@@ -650,6 +667,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         try {
             // We must call setAddComplete before calling handlerAdded. Otherwise if the handlerAdded method generates
             // any pipeline events ctx.handler() will miss them because the state will not allow it.
+            // 当前节点设置状态
             ctx.setAddComplete();
             // 添加自定义的handle
             ctx.handler().handlerAdded(ctx);
@@ -685,8 +703,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         // Notify the complete removal.
         try {
             try {
+                // 调用删除的回调方法
                 ctx.handler().handlerRemoved(ctx);
             } finally {
+                // 设置为删除状态
                 ctx.setRemoved();
             }
         } catch (Throwable t) {
@@ -779,11 +799,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         AbstractChannelHandlerContext ctx = head.next;
         for (;;) {
-
+            // 如果没有找到返回null ，最后一个节点就是null
             if (ctx == null) {
                 return null;
             }
-
+            //拿到这个channelHandler
             if (ctx.handler() == handler) {
                 return ctx;
             }
