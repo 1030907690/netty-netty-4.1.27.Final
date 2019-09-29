@@ -935,6 +935,9 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         return false;
     }
 
+    /***
+     * 拿到下一个是inbound的channelHandlerContext
+     * */
     private AbstractChannelHandlerContext findContextInbound() {
         AbstractChannelHandlerContext ctx = this;
         do {
@@ -942,7 +945,9 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         } while (!ctx.inbound);
         return ctx;
     }
-
+    /***
+     * 拿到下一个是outbound的channelHandlerContext
+     * */
     private AbstractChannelHandlerContext findContextOutbound() {
         AbstractChannelHandlerContext ctx = this;
         do {
