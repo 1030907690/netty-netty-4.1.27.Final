@@ -30,6 +30,9 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
         // 发送数据给客户端
         RpcResponse rpcResponse = new RpcResponse();
         rpcResponse.setResult("response " + JSONObject.toJSONString(msg));
+        // 从tail节点开始调用findContextOutbound一直往前得到handle，调用其write直到head节点;如果中间有handler传递write会被中断;进入AbstractChannel#write
+        //ctx.channel().write(rpcResponse);
+        // 从当前节点开始调用findContextOutbound一直往前得到handle，调用其write直到head节点;如果中间有handler传递write会被中断
         ctx.write(rpcResponse);
         ctx.flush();
         ctx.close();

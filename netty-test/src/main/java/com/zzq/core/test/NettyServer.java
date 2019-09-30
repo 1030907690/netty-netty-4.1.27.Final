@@ -1,5 +1,6 @@
 package com.zzq.core.test;
 
+import com.zzq.core.test.handler.AuthHandler;
 import com.zzq.core.test.handler.RpcServerHandler;
 import com.zzq.core.test.handler.SimpleServerHandler;
 import io.netty.bootstrap.ServerBootstrap;
@@ -55,7 +56,7 @@ public class NettyServer {
                             , ClassResolvers.cacheDisabled(null)
                     ));
 
-
+                    pipeline.addLast(new AuthHandler());
                     pipeline.addLast(new RpcServerHandler(handlerMap));
                 }
 
