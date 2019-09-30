@@ -35,10 +35,16 @@ final class DefaultChannelHandlerContext extends AbstractChannelHandlerContext {
         return handler;
     }
 
+    /*
+    * 判断是否是Inbound
+    * */
     private static boolean isInbound(ChannelHandler handler) {
         return handler instanceof ChannelInboundHandler;
     }
 
+    /*
+   * 判断是否是Outbound
+   * */
     private static boolean isOutbound(ChannelHandler handler) {
         return handler instanceof ChannelOutboundHandler;
     }

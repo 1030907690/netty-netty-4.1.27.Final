@@ -739,6 +739,7 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
 
     private void invokeWrite0(Object msg, ChannelPromise promise) {
         try {
+            // 调用handler的write方法
             ((ChannelOutboundHandler) handler()).write(this, msg, promise);
         } catch (Throwable t) {
             notifyOutboundHandlerException(t, promise);
@@ -810,10 +811,12 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
     }
 
     private void write(Object msg, boolean flush, ChannelPromise promise) {
+        //找下一个outBound,其实代码是查找前面一个节点
         AbstractChannelHandlerContext next = findContextOutbound();
         final Object m = pipeline.touch(msg, next);
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
+            //判断有没有调用flush
             if (flush) {
                 next.invokeWriteAndFlush(m, promise);
             } else {

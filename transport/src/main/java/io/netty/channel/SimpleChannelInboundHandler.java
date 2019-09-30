@@ -99,9 +99,11 @@ public abstract class SimpleChannelInboundHandler<I> extends ChannelInboundHandl
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         boolean release = true;
         try {
+            //接受入站消息
             if (acceptInboundMessage(msg)) {
                 @SuppressWarnings("unchecked")
                 I imsg = (I) msg;
+                // 抽象方法
                 channelRead0(ctx, imsg);
             } else {
                 release = false;
@@ -109,6 +111,7 @@ public abstract class SimpleChannelInboundHandler<I> extends ChannelInboundHandl
             }
         } finally {
             if (autoRelease && release) {
+                // 释放
                 ReferenceCountUtil.release(msg);
             }
         }
