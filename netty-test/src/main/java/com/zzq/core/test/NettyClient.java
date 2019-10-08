@@ -82,7 +82,7 @@ public class NettyClient {
             future.channel().closeFuture().sync();
             long endTime = System.currentTimeMillis();
 
-            System.out.println("本次消耗 " + ((endTime - startTime) / 1000) + "秒");
+            System.out.println("本次消耗 [ " + ((endTime - startTime) / 1000) + " ]秒");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
