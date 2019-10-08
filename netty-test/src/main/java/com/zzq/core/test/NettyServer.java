@@ -26,14 +26,17 @@ import java.util.Map;
  */
 public class NettyServer {
 
-    /** 业务处理线程数 **/
+    /**
+     * 业务处理线程数
+     **/
     private static final int HANDLER_THREAD_CORE_NUMBER = Runtime.getRuntime().availableProcessors();
 
     public static void main(String[] args) {
         Map<String, Object> handlerMap = new HashMap<>();
         EventLoopGroup boosGroup = new NioEventLoopGroup();
+        //EventLoopGroup workerGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
-        // 业务处理的线程池
+        // 业务处理的线程池 如果我把workerGroup线程池线程调成1,则多个连接的业务处理将被阻塞,如workerGroup线程处理不过来就需要加个handler线程池了
         EventLoopGroup handlerGroup = new NioEventLoopGroup(HANDLER_THREAD_CORE_NUMBER);
         try {
 
@@ -81,6 +84,7 @@ public class NettyServer {
             //退出，释放线程池资源
             boosGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
+            handlerGroup.shutdownGracefully();
         }
     }
 

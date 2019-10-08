@@ -37,8 +37,12 @@ public class NettyClient {
         user.setName("user zhangsan");
         request.setUser(user);
 
-        request.setParams(new HashMap<String,String>(){{put("param1","test");}});
-        request.setUserList(new ArrayList<User>(){{add(user);}});
+        request.setParams(new HashMap<String, String>() {{
+            put("param1", "test");
+        }});
+        request.setUserList(new ArrayList<User>() {{
+            add(user);
+        }});
 
         RpcRequest rpcRequest = new RpcRequest();
         rpcRequest.setParams(new Object[]{request});
@@ -74,9 +78,11 @@ public class NettyClient {
             //System.out.println("host " + host + " prot " + port);
             ChannelFuture future = b.connect(host, port).sync();
             future.channel().writeAndFlush(rpcRequest);
+            long startTime = System.currentTimeMillis();
             future.channel().closeFuture().sync();
+            long endTime = System.currentTimeMillis();
 
-
+            System.out.println("本次消耗 " + ((endTime - startTime) / 1000) + "秒");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

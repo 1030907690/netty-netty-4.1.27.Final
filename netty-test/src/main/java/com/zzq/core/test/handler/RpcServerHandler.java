@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
 
+import java.util.Date;
 import java.util.Map;
 
 public class RpcServerHandler extends ChannelInboundHandlerAdapter {
@@ -23,7 +24,7 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
         //msg 可以接收到数据
 
 
-        System.out.println(" server received data " + JSONObject.toJSONString(msg));
+        System.out.println(new Date().toString() + " server received data " + JSONObject.toJSONString(msg));
 
         //获得消费者传过来的数据
 
@@ -33,6 +34,11 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
         // 从tail节点开始调用findContextOutbound一直往前得到handle，调用其write直到head节点;如果中间有handler传递write会被中断;进入AbstractChannel#write
         //ctx.channel().write(rpcResponse);
         // 从当前节点开始调用findContextOutbound一直往前得到handle，调用其write直到head节点;如果中间有handler传递write会被中断
+        try {
+            Thread.sleep(25000);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         ctx.write(rpcResponse);
         ctx.flush();
         ctx.close();
