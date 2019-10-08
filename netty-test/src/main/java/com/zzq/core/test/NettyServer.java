@@ -26,13 +26,15 @@ import java.util.Map;
  */
 public class NettyServer {
 
+    /** 业务处理线程数 **/
+    private static final int HANDLER_THREAD_CORE_NUMBER = Runtime.getRuntime().availableProcessors();
 
     public static void main(String[] args) {
         Map<String, Object> handlerMap = new HashMap<>();
         EventLoopGroup boosGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         // 业务处理的线程池
-        EventLoopGroup handlerGroup = new NioEventLoopGroup();
+        EventLoopGroup handlerGroup = new NioEventLoopGroup(HANDLER_THREAD_CORE_NUMBER);
         try {
 
             //启动netty服务
