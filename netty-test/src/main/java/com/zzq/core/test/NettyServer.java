@@ -31,6 +31,8 @@ public class NettyServer {
         Map<String, Object> handlerMap = new HashMap<>();
         EventLoopGroup boosGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
+        // 业务处理的线程池
+        EventLoopGroup handlerGroup = new NioEventLoopGroup();
         try {
 
             //启动netty服务
@@ -57,7 +59,7 @@ public class NettyServer {
                     ));
 
                     pipeline.addLast(new AuthHandler());
-                    pipeline.addLast(new RpcServerHandler(handlerMap));
+                    pipeline.addLast(handlerGroup, new RpcServerHandler(handlerMap));
                 }
 
             }).option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
@@ -67,7 +69,7 @@ public class NettyServer {
             String ip = addrs[0];
             int port = Integer.parseInt(addrs[1]);
             ChannelFuture future = bootstrap.bind(ip, port).sync();
-            System.out.println("接口服务启动成功，等待客户端连接...[ "+ serviceAddress + "]");
+            System.out.println("接口服务启动成功，等待客户端连接...[ " + serviceAddress + "]");
             //使用sync方法进行阻塞，等待服务端链路关闭之后Main函数才退出
             future.channel().closeFuture().sync();
             //  logger.info("服务关闭 [ {} ]", serviceAddress);
