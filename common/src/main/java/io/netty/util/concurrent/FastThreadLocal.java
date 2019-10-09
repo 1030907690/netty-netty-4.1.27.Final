@@ -125,6 +125,7 @@ public class FastThreadLocal<V> {
     private final int index;
 
     public FastThreadLocal() {
+        // 索引
         index = InternalThreadLocalMap.nextVariableIndex();
     }
 
@@ -185,6 +186,7 @@ public class FastThreadLocal<V> {
     private V initialize(InternalThreadLocalMap threadLocalMap) {
         V v = null;
         try {
+            // 回调自己实现的initialValue方法
             v = initialValue();
         } catch (Exception e) {
             PlatformDependent.throwException(e);

@@ -67,6 +67,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
 
     public static InternalThreadLocalMap get() {
         Thread thread = Thread.currentThread();
+        // 判断当前线程是否是FastThreadLocalThread
         if (thread instanceof FastThreadLocalThread) {
             return fastGet((FastThreadLocalThread) thread);
         } else {
@@ -127,6 +128,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     }
 
     private static Object[] newIndexedVariableTable() {
+        // 初始化ThreadLocalMap
         Object[] array = new Object[32];
         Arrays.fill(array, UNSET);
         return array;
