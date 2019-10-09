@@ -1,6 +1,7 @@
 package com.zzq.core.test.threadlocal;
 
 import io.netty.util.concurrent.FastThreadLocal;
+import io.netty.util.concurrent.FastThreadLocalThread;
 
 /**
  * @author Zhou Zhong Qing
@@ -25,7 +26,7 @@ public class FastThreadLocalTest {
     };
 
     public static void main(String[] args) {
-        new Thread() {
+        new FastThreadLocalThread() {
             @Override
             public void run() {
                 Object object = threadLocal.get();
@@ -39,10 +40,9 @@ public class FastThreadLocalTest {
             e.printStackTrace();
         }*/
 
-        new Thread() {
+        new FastThreadLocalThread() {
             @Override
             public void run() {
-                threadLoca2.set(new Object());
                 Object object = threadLoca2.get();
                 System.out.println(object);
             }
