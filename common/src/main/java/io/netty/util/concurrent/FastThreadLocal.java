@@ -136,6 +136,7 @@ public class FastThreadLocal<V> {
     public final V get() {
         InternalThreadLocalMap threadLocalMap = InternalThreadLocalMap.get();
         Object v = threadLocalMap.indexedVariable(index);
+        // 判断是否是初始值,如果不是返回
         if (v != InternalThreadLocalMap.UNSET) {
             return (V) v;
         }
@@ -226,6 +227,7 @@ public class FastThreadLocal<V> {
      * @return see {@link InternalThreadLocalMap#setIndexedVariable(int, Object)}.
      */
     private boolean setKnownNotUnset(InternalThreadLocalMap threadLocalMap, V value) {
+        // 判断是否是第一次添加数据, 是返回true 否则返回false
         if (threadLocalMap.setIndexedVariable(index, value)) {
             addToVariablesToRemove(threadLocalMap, this);
             return true;

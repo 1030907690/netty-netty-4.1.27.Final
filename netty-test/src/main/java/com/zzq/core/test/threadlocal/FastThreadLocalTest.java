@@ -12,7 +12,7 @@ import io.netty.util.concurrent.FastThreadLocalThread;
  */
 public class FastThreadLocalTest {
 
-    private static final FastThreadLocal<Object> threadLocal = new FastThreadLocal<Object>() {
+   /* private static final FastThreadLocal<Object> threadLocal = new FastThreadLocal<Object>() {
         @Override
         protected Object initialValue() throws Exception {
             return new Object();
@@ -23,27 +23,33 @@ public class FastThreadLocalTest {
         protected Object initialValue() throws Exception {
             return new Object();
         }
-    };
+    };*/
+
+    private static final FastThreadLocal<String> threadLoca3 = new FastThreadLocal<String>();
+
 
     public static void main(String[] args) {
         new FastThreadLocalThread() {
             @Override
             public void run() {
-                Object object = threadLocal.get();
+                threadLoca3.set("thread1");
+                Object object = threadLoca3.get();
                 System.out.println(object);
             }
         }.start();
 
-        /*try {
-            Thread.sleep(9000);
+        try {
+            Thread.sleep(19000);
         } catch (Exception e) {
             e.printStackTrace();
-        }*/
+        }
 
         new FastThreadLocalThread() {
             @Override
             public void run() {
-                Object object = threadLoca2.get();
+                threadLoca3.set("thread2");
+                Object object = threadLoca3.get();
+                threadLoca3.set("thread3");
                 System.out.println(object);
             }
         }.start();
