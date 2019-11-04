@@ -33,13 +33,22 @@ import static java.lang.Math.min;
  */
 public class AdaptiveRecvByteBufAllocator extends DefaultMaxMessagesRecvByteBufAllocator {
 
+    //DEFAULT_MINIMUM：最小缓存（64），在SIZE_TABLE中对应的下标为3。
     static final int DEFAULT_MINIMUM = 64;
+    //DEFAULT_INITIAL ：初始化缓存大小，第一次分配缓存时，由于没有上一次实际收到的字节数做参考，需要给一个默认初始值。
     static final int DEFAULT_INITIAL = 1024;
+    //DEFAULT_MAXIMUM ：最大缓存（65536），在SIZE_TABLE中对应的下标为38。
     static final int DEFAULT_MAXIMUM = 65536;
 
+    //INDEX_INCREMENT：上次预估缓存偏小，下次index的递增值。
     private static final int INDEX_INCREMENT = 4;
+    // INDEX_DECREMENT ：上次预估缓存偏大，下次index的递减值。
     private static final int INDEX_DECREMENT = 1;
 
+    /*
+    SIZE_TABLE：按照从小到大的顺序预先存储可以分配的缓存大小。
+    从16开始，每次累加16，直到496，接着从512开始，每次增大一倍，直到溢出。SIZE_TABLE初始化过程如下。
+    * */
     private static final int[] SIZE_TABLE;
 
     static {
@@ -82,7 +91,7 @@ public class AdaptiveRecvByteBufAllocator extends DefaultMaxMessagesRecvByteBufA
                 high = mid - 1;
             } else if (size == a) {
                 return mid;
-            } else {
+            } else {//这里的情况就是 a < size <= b 的情况
                 return mid + 1;
             }
         }

@@ -441,6 +441,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         @Override
         public RecvByteBufAllocator.Handle recvBufAllocHandle() {
             if (recvHandle == null) {
+                //config.getRecvByteBufAllocator()得到的是一个 AdaptiveRecvByteBufAllocator实例。
                 recvHandle = config().getRecvByteBufAllocator().newHandle();
             }
             return recvHandle;
@@ -484,7 +485,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 register0(promise);
             } else {
                 try {
-                    eventLoop.execute(new Runnable() { //重点
+                    eventLoop.execute(new Runnable() { //重点 execute方法 启动线程
                         @Override
                         public void run() {
                             register0(promise);//分析

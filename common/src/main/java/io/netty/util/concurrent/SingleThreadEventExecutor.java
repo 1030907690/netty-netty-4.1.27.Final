@@ -199,6 +199,9 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     /**
      * @see Queue#poll()
      */
+    /*
+    * 通过调用如下的pollTash()方法获取任务队列中任务，然后调用该任务的run方法执行此任务，就这样依次执行完任务队列中所有的任务。
+    * */
     protected Runnable pollTask() {
         assert inEventLoop();
         return pollTaskFrom(taskQueue);
@@ -390,8 +393,12 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      * Poll all tasks from the task queue and run them via {@link Runnable#run()} method.  This method stops running
      * the tasks in the task queue and returns if it ran longer than {@code timeoutNanos}.
      */
+
+    /*
+    * 从任务队列中拉取所有的任务，然后运行这些任务的run方法来执行他们。如果至少有一个任务被执行就返回true
+    * */
     protected boolean runAllTasks(long timeoutNanos) {
-        // 定时任务中聚合任务
+        // 定时任务中聚合任务  通过调用如下的fetchFromDelayedQueue函数从定时任务队列拉取已经到“执行时间”的任务到任务队列
         fetchFromScheduledTaskQueue();
         // 取出task
         Runnable task = pollTask();
@@ -410,6 +417,8 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
             // Check timeout every 64 tasks because nanoTime() is relatively expensive.
             // XXX: Hard-coded value - will make it configurable if it is really a problem.
+            //每64个任务检查一次超时，因为nantime（）相对比较昂贵。
+            //xxx:硬编码值-如果确实有问题，将使其可配置。
             if ((runTasks & 0x3F) == 0) {
                 lastExecutionTime = ScheduledFutureTask.nanoTime();
                 if (lastExecutionTime >= deadline) {

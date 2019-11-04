@@ -34,6 +34,13 @@ public abstract class AbstractByteBufAllocator implements ByteBufAllocator {
         ResourceLeakDetector.addExclusions(AbstractByteBufAllocator.class, "toLeakAwareBuffer");
     }
 
+    /*
+    方法toLeakAwareBuffer(buf)对申请的buf又进行了一次包装。将UnpooledUnsafeDirectByteBuf buf根据ResourceLeakDetector.getLevel()返回值的不同封装为不同的Buf。
+
+    Netty中使用引用计数机制来管理资源，ByteBuf实现了ReferenceCounted接口，当实例化一个ByteBuf时，引用计数为1， 代码中需要保持一个该对象的引用时需要调用retain方法将计数增1，
+    对象使用完时调用release将计数减1。当引用计数变为0时，对象将释放所持有的底层资源或将资源返回资源池。
+
+    * */
     protected static ByteBuf toLeakAwareBuffer(ByteBuf buf) {
         ResourceLeakTracker<ByteBuf> leak;
         switch (ResourceLeakDetector.getLevel()) {
@@ -131,6 +138,9 @@ public abstract class AbstractByteBufAllocator implements ByteBufAllocator {
         return heapBuffer(DEFAULT_INITIAL_CAPACITY);
     }
 
+    /*
+    * ioBuffer函数中主要逻辑为：看平台是否支持unsafe，选择使用直接物理内存还是堆上内存。
+    * */
     @Override
     public ByteBuf ioBuffer(int initialCapacity) {
         if (PlatformDependent.hasUnsafe()) {

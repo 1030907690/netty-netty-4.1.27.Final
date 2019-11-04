@@ -46,6 +46,7 @@ import java.util.List;
 public class NioServerSocketChannel extends AbstractNioMessageChannel
                              implements io.netty.channel.socket.ServerSocketChannel {
 
+    //设置默认的maxMessagesPerRead参数
     private static final ChannelMetadata METADATA = new ChannelMetadata(false, 16);
     private static final SelectorProvider DEFAULT_SELECTOR_PROVIDER = SelectorProvider.provider();
 
@@ -147,6 +148,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
 
     @Override
     protected int doReadMessages(List<Object> buf) throws Exception {
+        //检测是否有客户端的连接进来
         SocketChannel ch = SocketUtils.accept(javaChannel());
 
         try {

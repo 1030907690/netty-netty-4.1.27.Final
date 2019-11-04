@@ -584,15 +584,35 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    /*
+    * 迭代 selectedKeys 获取就绪的 IO 事件, 然后为每个事件都调用 processSelectedKey 来处理它.
+    * */
+
+    /*上面的处理过程中有一个needsToSelectAgain，什么情况下会触发这个条件呢。当多个channel从selector中撤销注册时，
+    由于很多数据无效了（默认为256），需要重新处理，设置needsToSelectAgain=true的函数如下：*/
+
+
+    /*
+       void cancel(SelectionKey key) {
+        key.cancel();
+        cancelledKeys ++;
+        if (cancelledKeys >= CLEANUP_INTERVAL) {
+            cancelledKeys = 0;
+            needsToSelectAgain = true;
+        }
+    }
+    * */
     private void processSelectedKeysOptimized() {
         for (int i = 0; i < selectedKeys.size; ++i) {
             final SelectionKey k = selectedKeys.keys[i];
             // null out entry in the array to allow to have it GC'ed once the Channel close
             // See https://github.com/netty/netty/issues/2363
+            //方便gc
             selectedKeys.keys[i] = null;
 
             final Object a = k.attachment();
 
+            // key关联两种不同类型的对象，一种是AbstractNioChannel，一种是NioTask
             if (a instanceof AbstractNioChannel) {
                 //默认进这里
                 processSelectedKey(k, (AbstractNioChannel) a);
@@ -602,6 +622,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 processSelectedKey(k, task);
             }
 
+            // 如果需要重新select则重置当前数据
             if (needsToSelectAgain) {
                 // null out entries in the array to allow to have it GC'ed once the Channel close
                 // See https://github.com/netty/netty/issues/2363
@@ -613,6 +634,16 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    /*
+    * 该函数主要SelectionKey k进行了检查，然后如下几种不同的情况
+
+    1）OP_READ, 可读事件, 即 Channel 中收到了新数据可供上层读取。
+
+    2）OP_WRITE, 可写事件, 即上层可以向 Channel 写入数据。
+
+    3）OP_CONNECT, 连接建立事件, 即 TCP 连接已经建立, Channel 处于 active 状态.
+
+    * */
     private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
         final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();
         // 判断是否合法
@@ -644,8 +675,10 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             int readyOps = k.readyOps();
             // We first need to call finishConnect() before try to trigger a read(...) or write(...) as otherwise
             // the NIO JDK channel implementation may throw a NotYetConnectedException.
+            // 如果是OP_CONNECT，则需要移除OP_CONNECT否则Selector.select(timeout)将立即返回不会有任何阻塞，这样可能会出现cpu 100%
             if ((readyOps & SelectionKey.OP_CONNECT) != 0) {
                 // remove OP_CONNECT as otherwise Selector.select(..) will always return without blocking
+                //移除操作连接，否则选择器。选择（..）将始终返回而不阻塞
                 // See https://github.com/netty/netty/issues/924
                 int ops = k.interestOps();
                 ops &= ~SelectionKey.OP_CONNECT;
@@ -655,6 +688,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             }
 
             // Process OP_WRITE first as we may be able to write some queued buffers and so free memory.
+            // 如果准备好了WRITE则将缓冲区中的数据发送出去，如果缓冲区中数据都发送完成，则清除之前关注的OP_WRITE标记
             if ((readyOps & SelectionKey.OP_WRITE) != 0) {
                 // Call forceFlush which will also take care of clear the OP_WRITE once there is nothing left to write
                 ch.unsafe().forceFlush();
@@ -662,11 +696,13 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
             // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead
             // to a spin loop
+            // 如果准备好READ或ACCEPT则触发unsafe.read() ,检查是否为0，如上面的源码英文注释所说：解决JDK可能会产生死循环的一个bug。
             if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
                 // 去取数据
                 unsafe.read();
             }
         } catch (CancelledKeyException ignored) {
+            // 如果出现异常关闭
             unsafe.close(unsafe.voidPromise());
         }
     }
@@ -768,7 +804,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 // Selector#wakeup. So we need to check task queue again before executing select operation.
                 // If we don't, the task might be pended until select operation was timed out.
                 // It might be pended until idle timeout if IdleStateHandler existed in pipeline.
-                // 盘点有没有任务
+                // 判断有没有任务
                 if (hasTasks() && wakenUp.compareAndSet(false, true)) {
                     selector.selectNow();
                     selectCnt = 1;

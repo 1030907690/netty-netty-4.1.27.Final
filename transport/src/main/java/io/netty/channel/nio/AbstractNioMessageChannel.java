@@ -60,6 +60,9 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
 
         private final List<Object> readBuf = new ArrayList<Object>();
 
+        /**
+         * 服务端的
+         * **/
         @Override
         public void read() {
             assert eventLoop().inEventLoop();
@@ -74,7 +77,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                 try {
                     do {
                         int localRead = doReadMessages(readBuf);
-                        if (localRead == 0) {
+                        if (localRead == 0) { //如果localRead等于0，说明没有连接进来
                             break;
                         }
                         if (localRead < 0) {
@@ -83,12 +86,21 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                         }
 
                         allocHandle.incMessagesRead(localRead);
+
+                        /*
+                       3.1）读取到Buf中的总容量大于Integer.MAX_VALUE - localReadAmount时为避免溢出则退出。
+
+                        3.2）config的autoRead为false，则退出
+
+                        3.3）循环次数超过maxMessagesPerRead时，即只能在管道中读取maxMessagesPerRead次数据，既是还没有读完也要退出。在上篇博文中，Boss线程接受客户端连接也用到了此变量，即当boss线程 selector检测到OP_ACCEPT事件后一次只能接受maxMessagesPerRead个客户端连接
+                       **/
                     } while (allocHandle.continueReading());
                 } catch (Throwable t) {
                     exception = t;
                 }
 
                 int size = readBuf.size();
+                //对于每个客户端SocketChannel，在pipeline中寻找第一个Inbound=true的HandlerContext来对其进行处理。
                 for (int i = 0; i < size; i ++) {
                     readPending = false;
                     pipeline.fireChannelRead(readBuf.get(i));

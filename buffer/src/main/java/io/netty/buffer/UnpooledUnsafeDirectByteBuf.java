@@ -49,6 +49,7 @@ public class UnpooledUnsafeDirectByteBuf extends AbstractReferenceCountedByteBuf
      * @param maxCapacity     the maximum capacity of the underlying direct buffer
      */
     public UnpooledUnsafeDirectByteBuf(ByteBufAllocator alloc, int initialCapacity, int maxCapacity) {
+        //super(maxCapacity)这行代码主要是将maxCapacity参数设置在了其父类AbstractReferenceCountedByteBuf的父类AbstractByteBuf的字段maxCapacity上。
         super(maxCapacity);
         if (alloc == null) {
             throw new NullPointerException("alloc");
@@ -117,6 +118,7 @@ public class UnpooledUnsafeDirectByteBuf extends AbstractReferenceCountedByteBuf
      * Allocate a new direct {@link ByteBuffer} with the given initialCapacity.
      */
     protected ByteBuffer allocateDirect(int initialCapacity) {
+        // 1、先利用ByteBuffer的allocateDirect方法分配了大小为initialCapacity的缓存
         return ByteBuffer.allocateDirect(initialCapacity);
     }
 
@@ -127,6 +129,14 @@ public class UnpooledUnsafeDirectByteBuf extends AbstractReferenceCountedByteBuf
         PlatformDependent.freeDirectBuffer(buffer);
     }
 
+    /*
+    * 2、然后判断将旧缓存给free掉
+
+3、最后将新缓存赋给字段buffer上
+
+其中：memoryAddress = PlatformDependent.directBufferAddress(buffer) 获取buffer的address字段值，指向缓存地址。
+capacity = buffer.remaining() 获取缓存容量。
+ */
     final void setByteBuffer(ByteBuffer buffer, boolean tryFree) {
         if (tryFree) {
             ByteBuffer oldBuffer = this.buffer;
