@@ -99,21 +99,21 @@ package io.netty.buffer;
  * memoryMap[id]= depth_of_id  is defined above
  * depthMap[id]= x  indicates that the first node which is free to be allocated is at depth x (from root)
  */
-final class PoolChunk<T> implements PoolChunkMetric {
+final class PoolChunk<T> implements PoolChunkMetric { // PoolChunk会涉及到具体的内存,泛型T表示byte[](堆内存)、或java.nio.ByteBuffer(堆外内存)
 
     private static final int INTEGER_SIZE_MINUS_ONE = Integer.SIZE - 1;
 
-    final PoolArena<T> arena;
-    final T memory;
-    final boolean unpooled;
+    final PoolArena<T> arena; //表示该PoolChunk所属的PoolArena。
+    final T memory;// 具体用来表示内存；byte[]或java.nio.ByteBuffer。
+    final boolean unpooled; // 是否是可重用的，unpooled=false表示可重用
     final int offset;
 
     private final byte[] memoryMap;
     private final byte[] depthMap;
-    private final PoolSubpage<T>[] subpages;
+    private final PoolSubpage<T>[] subpages;//表示该PoolChunk所包含的PoolSubpage。也就是PoolChunk连续的可用内存。
     /** Used to determine if the requested capacity is equal to or greater than pageSize. */
     private final int subpageOverflowMask;
-    private final int pageSize;
+    private final int pageSize;//每个PoolSubpage的大小，默认为8192个字节（8K)
     private final int pageShifts;
     private final int maxOrder;
     private final int chunkSize;
@@ -122,15 +122,20 @@ final class PoolChunk<T> implements PoolChunkMetric {
     /** Used to mark memory as unusable */
     private final byte unusable;
 
-    private int freeBytes;
+    private int freeBytes;//当前PoolChunk空闲的内存。
 
-    PoolChunkList<T> parent;
+    PoolChunkList<T> parent;//一个PoolChunk分配后，会根据使用率挂在PoolArena的一个PoolChunkList中
+    // PoolChunk本身设计为一个链表结构
     PoolChunk<T> prev;
     PoolChunk<T> next;
 
     // TODO: Test if adding padding helps under contention
     //private long pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;
 
+    /*
+    * PoolChunk默认情况下：maxOrder = 11，即根据maxSubpageAllocs = 1 << maxOrder可得一个PoolChunk默认情况下由2^11=2048个SubPage构成，
+    * 而默认情况下一个page默认大小为8k，即pageSize=8K。
+    * */
     PoolChunk(PoolArena<T> arena, T memory, int pageSize, int maxOrder, int pageShifts, int chunkSize, int offset) {
         unpooled = false;
         this.arena = arena;
@@ -280,8 +285,8 @@ final class PoolChunk<T> implements PoolChunkMetric {
         while (val < d || (id & initial) == 0) { // id & initial == 1 << d for all ids at depth d, for < d it is 0
             id <<= 1;
             val = value(id);
-            if (val > d) {
-                id ^= 1;
+            if (val > d) { //当前节点不符合要求，需要到兄弟节点来寻找。
+                id ^= 1; //通过异或可以找到兄弟节点
                 val = value(id);
             }
         }
@@ -322,7 +327,7 @@ final class PoolChunk<T> implements PoolChunkMetric {
         PoolSubpage<T> head = arena.findSubpagePoolHead(normCapacity);
         synchronized (head) {
             int d = maxOrder; // subpages are only be allocated from pages i.e., leaves
-            int id = allocateNode(d);
+            int id = allocateNode(d); //找到符合要求的节点的索引。
             if (id < 0) {
                 return id;
             }
@@ -330,9 +335,9 @@ final class PoolChunk<T> implements PoolChunkMetric {
             final PoolSubpage<T>[] subpages = this.subpages;
             final int pageSize = this.pageSize;
 
-            freeBytes -= pageSize;
+            freeBytes -= pageSize; //修改该chunk的空闲内存大小
 
-            int subpageIdx = subpageIdx(id);
+            int subpageIdx = subpageIdx(id); //求余，得到page在subPages中的索引。
             PoolSubpage<T> subpage = subpages[subpageIdx];
             if (subpage == null) {
                 subpage = new PoolSubpage<T>(head, this, id, runOffset(id), pageSize, normCapacity);

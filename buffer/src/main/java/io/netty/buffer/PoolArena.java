@@ -28,6 +28,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.max;
 
+/*先说结论：PoolArena通过6个PoolChunkList来管理PoolChunk，而每个PoolChunk由N个PoolSubpage构成，即将PoolChunk的里面底层实现 T memory分成N段，
+每段就是一个PoolSubpage。当用户申请一个Buf时，使用Arena所拥有的chunk所管辖的page分配内存，内存分配的落地点为 T memory上。
+*/
 abstract class PoolArena<T> implements PoolArenaMetric {
     static final boolean HAS_UNSAFE = PlatformDependent.hasUnsafe();
 
@@ -39,19 +42,24 @@ abstract class PoolArena<T> implements PoolArenaMetric {
 
     static final int numTinySubpagePools = 512 >>> 4;
 
-    final PooledByteBufAllocator parent;
+    final PooledByteBufAllocator parent; //表示该PoolArena的allocator
 
-    private final int maxOrder;
-    final int pageSize;
-    final int pageShifts;
-    final int chunkSize;
-    final int subpageOverflowMask;
-    final int numSmallSubpagePools;
+    private final int maxOrder;//表示chunk中由Page节点构成的二叉树的最大高度。默认11
+    final int pageSize;//page的大小，默认8K
+    final int pageShifts; //pageShifts=log(pageSize),默认13
+    final int chunkSize; //chunk的大小
+    final int subpageOverflowMask; //该变量用于判断申请的内存大小与page之间的关系，是大于，还是小于
+    final int numSmallSubpagePools;//用来分配small内存的数组长度
+
     final int directMemoryCacheAlignment;
     final int directMemoryCacheAlignmentMask;
+    /*
+    tinySubpagePools来缓存（或说是存储）用来分配tiny（小于512）内存的Page；
+    smallSubpagePools来缓存用来分配small（大于等于512且小于pageSize）内存的Page
+    */
     private final PoolSubpage<T>[] tinySubpagePools;
     private final PoolSubpage<T>[] smallSubpagePools;
-
+    //用来存储用来分配给Normal（超过一页）大小内存的PoolChunk。
     private final PoolChunkList<T> q050;
     private final PoolChunkList<T> q025;
     private final PoolChunkList<T> q000;
@@ -84,6 +92,7 @@ abstract class PoolArena<T> implements PoolArenaMetric {
 
     protected PoolArena(PooledByteBufAllocator parent, int pageSize,
           int maxOrder, int pageShifts, int chunkSize, int cacheAlignment) {
+        //从PooledByteBufAllocator中传送过来的相关字段值。
         this.parent = parent;
         this.pageSize = pageSize;
         this.maxOrder = maxOrder;
@@ -91,7 +100,7 @@ abstract class PoolArena<T> implements PoolArenaMetric {
         this.chunkSize = chunkSize;
         directMemoryCacheAlignment = cacheAlignment;
         directMemoryCacheAlignmentMask = cacheAlignment - 1;
-        subpageOverflowMask = ~(pageSize - 1);
+        subpageOverflowMask = ~(pageSize - 1); //该变量用于判断申请的内存大小与page之间的关系，是大于，还是小于
         tinySubpagePools = newSubpagePoolArray(numTinySubpagePools);
         for (int i = 0; i < tinySubpagePools.length; i ++) {
             tinySubpagePools[i] = newSubpagePoolHead(pageSize);

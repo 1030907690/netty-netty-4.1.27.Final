@@ -168,8 +168,10 @@ public interface ChannelFuture extends Future<Void> {
      * Returns a channel where the I/O operation associated with this
      * future takes place.
      */
+    // ChannelFuture 关联的 Channel
     Channel channel();
 
+    // 覆写以下几个方法，使得它们返回值为 ChannelFuture 类型
     @Override
     ChannelFuture addListener(GenericFutureListener<? extends Future<? super Void>> listener);
 
@@ -208,5 +210,7 @@ public interface ChannelFuture extends Future<Void> {
      *     <li>{@link #syncUninterruptibly()}</li>
      * </ul>
      */
+    // 用来标记该 future 是 void 的，
+    // 这样就不允许使用 addListener(...), sync(), await() 以及它们的几个重载方法
     boolean isVoid();
 }

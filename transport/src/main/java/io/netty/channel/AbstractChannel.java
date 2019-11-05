@@ -523,7 +523,9 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 pipeline.fireChannelRegistered(); //执行完，控制台输出：channelRegistered
                 // Only fire a channelActive if the channel has never been registered. This prevents firing
                 // multiple channel actives if the channel is deregistered and re-registered.
+                // 这里 active 指的是 channel 已经打开
                 if (isActive()) {
+                    // 如果该 channel 是第一次执行 register，那么 fire ChannelActive 事件
                     if (firstRegistration) {
                         pipeline.fireChannelActive();
                     } else if (config().isAutoRead()) {
@@ -531,6 +533,8 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                         // again so that we process inbound data.
                         //
                         // See https://github.com/netty/netty/issues/4805
+                        // 该 channel 之前已经 register 过了，
+                        // 这里让该 channel 立马去监听通道中的 OP_READ 事件
                         beginRead();
                     }
                 }

@@ -18,20 +18,30 @@ package io.netty.buffer;
 
 final class PoolSubpage<T> implements PoolSubpageMetric {
 
-    final PoolChunk<T> chunk;
-    private final int memoryMapIdx;
+    final PoolChunk<T> chunk; //用来表示该Page属于哪个Chunk
+    private final int memoryMapIdx; //用来表示该Page在Chunk.memoryMap中的索引
+    // 当前Page在chunk.memoryMap的偏移量
     private final int runOffset;
-    private final int pageSize;
+    private final int pageSize;//Page的大小，默认为8192
+    /*
+    long 类型的数组bitmap用来表示Page中存储区域的使用状态，
+    数组中每个long的每一位表示一个块存储区域的占用情况：0表示未占用，1表示占用。
+    例如：对于一个4K的Page来说如果这个Page用来分配1K的存储与区，
+    那么long数组中就只有一个long类型的元素且这个数值的低4危用来指示4个存储区域的占用情况。
+    */
     private final long[] bitmap;
 
+    //PoolSubpage本身设计为一个链表结构
     PoolSubpage<T> prev;
     PoolSubpage<T> next;
 
     boolean doNotDestroy;
-    int elemSize;
-    private int maxNumElems;
-    private int bitmapLength;
+    int elemSize; //块的大小
+    private int maxNumElems; //page按elemSize大小分得的块个数
+    private int bitmapLength; //bitmap数组实际会用到的长度，等于pageSize/elemSize/64
+    // 下一个可用的位置
     private int nextAvail;
+    // 可用的段数量
     private int numAvail;
 
     // TODO: Test if adding padding helps under contention
@@ -52,7 +62,7 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
         this.memoryMapIdx = memoryMapIdx;
         this.runOffset = runOffset;
         this.pageSize = pageSize;
-        bitmap = new long[pageSize >>> 10]; // pageSize / 16 / 64
+        bitmap = new long[pageSize >>> 10]; // pageSize / 16 / 64   这里的16指的是块的最小值，64是long类型的所占的bit数。
         init(head, elemSize);
     }
 
@@ -62,8 +72,8 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
         if (elemSize != 0) {
             maxNumElems = numAvail = pageSize / elemSize;
             nextAvail = 0;
-            bitmapLength = maxNumElems >>> 6;
-            if ((maxNumElems & 63) != 0) {
+            bitmapLength = maxNumElems >>> 6; //等价于bitmapLength = maxNumElems / 64;64为long类型所占的bit数
+            if ((maxNumElems & 63) != 0) { //如果块的个数不是64的整倍数，则加 1
                 bitmapLength ++;
             }
 
@@ -81,7 +91,7 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
         if (elemSize == 0) {
             return toHandle(0);
         }
-
+        //判断此page是否还有“块”可用，以及是否被销毁了，如果没有可用空间或者是被销毁了则返回-1.
         if (numAvail == 0 || !doNotDestroy) {
             return -1;
         }
@@ -89,8 +99,8 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
         final int bitmapIdx = getNextAvail();
         int q = bitmapIdx >>> 6;
         int r = bitmapIdx & 63;
-        assert (bitmap[q] >>> r & 1) == 0;
-        bitmap[q] |= 1L << r;
+        assert (bitmap[q] >>> r & 1) == 0;//此bit位此时应该为0.
+        bitmap[q] |= 1L << r; //将bitmap[q]这个long型的数的第rbit置为1，标识此“块”已经被分配。
 
         if (-- numAvail == 0) {
             removeFromPool();
@@ -157,7 +167,7 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
 
     private int getNextAvail() {
         int nextAvail = this.nextAvail;
-        if (nextAvail >= 0) {
+        if (nextAvail >= 0) {//page被第一次申请可用“块”的时候nextAvail=0，会直接返回。表示直接用第0位内存块
             this.nextAvail = -1;
             return nextAvail;
         }
@@ -167,9 +177,10 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
     private int findNextAvail() {
         final long[] bitmap = this.bitmap;
         final int bitmapLength = this.bitmapLength;
+        //对标识数组bitmap中的每一个long元素进行判断
         for (int i = 0; i < bitmapLength; i ++) {
             long bits = bitmap[i];
-            if (~bits != 0) {
+            if (~bits != 0) { //还存在至少1个bit位不为1，1表示占用
                 return findNextAvail0(i, bits);
             }
         }
@@ -179,9 +190,9 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
     private int findNextAvail0(int i, long bits) {
         final int maxNumElems = this.maxNumElems;
         final int baseVal = i << 6;
-
+        //对long类型的数的每一bit位进行判断。
         for (int j = 0; j < 64; j ++) {
-            if ((bits & 1) == 0) {
+            if ((bits & 1) == 0) { //第j（bit）为0，即为占用
                 int val = baseVal | j;
                 if (val < maxNumElems) {
                     return val;
