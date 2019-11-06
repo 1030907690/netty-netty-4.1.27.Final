@@ -125,7 +125,7 @@ public class FastThreadLocal<V> {
     private final int index;
 
     public FastThreadLocal() {
-        // 索引
+        // 索引  每实例化一个FastThreadLocal往上累加
         index = InternalThreadLocalMap.nextVariableIndex();
     }
 
@@ -135,6 +135,7 @@ public class FastThreadLocal<V> {
     @SuppressWarnings("unchecked")
     public final V get() {
         InternalThreadLocalMap threadLocalMap = InternalThreadLocalMap.get();
+        //直接通过索引取出对象
         Object v = threadLocalMap.indexedVariable(index);
         // 判断是否是初始值,如果不是返回
         if (v != InternalThreadLocalMap.UNSET) {
@@ -180,7 +181,7 @@ public class FastThreadLocal<V> {
         if (v != InternalThreadLocalMap.UNSET) {
             return (V) v;
         }
-
+        // 如果没有初始化,并且用户端实现了initialValue方法,就会去调用自己实现的initialValue方法
         return initialize(threadLocalMap);
     }
 

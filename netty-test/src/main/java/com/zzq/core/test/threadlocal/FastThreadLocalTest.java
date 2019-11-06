@@ -25,16 +25,23 @@ public class FastThreadLocalTest {
         }
     };*/
 
-    private static final FastThreadLocal<String> threadLoca3 = new FastThreadLocal<String>();
+    private static FastThreadLocal<String> threadLoca3;
+    private static FastThreadLocal<String> threadLoca4;
+
+    public static void init() {
+        threadLoca3 = new FastThreadLocal<String>();
+        threadLoca4 = new FastThreadLocal<String>();
+    }
 
 
     public static void main(String[] args) {
+        init();
         new FastThreadLocalThread() {
             @Override
             public void run() {
                 threadLoca3.set("thread1");
                 Object object = threadLoca3.get();
-                System.out.println(object);
+                System.out.println("thread1= "+object);
             }
         }.start();
 
@@ -48,6 +55,7 @@ public class FastThreadLocalTest {
             @Override
             public void run() {
                 threadLoca3.set("thread2");
+                threadLoca4.set("4thread2");
                 Object object = threadLoca3.get();
                 threadLoca3.set("thread3");
                 System.out.println(object);

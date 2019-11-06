@@ -65,6 +65,9 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         return slowThreadLocalMap.get();
     }
 
+    /***
+     * 获取fastThreadLocal定义的ThreadLocalMap对象
+     * */
     public static InternalThreadLocalMap get() {
         Thread thread = Thread.currentThread();
         // 判断当前线程是否是FastThreadLocalThread
@@ -292,6 +295,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     /**
      * @return {@code true} if and only if a new thread-local variable has been created
      */
+    /*设置数据位置*/
     public boolean setIndexedVariable(int index, Object value) {
         Object[] lookup = indexedVariables;
         if (index < lookup.length) {
