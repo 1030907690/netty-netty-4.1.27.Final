@@ -203,6 +203,7 @@ public class FastThreadLocal<V> {
      * Set the value for the current thread.
      */
     public final void set(V value) {
+        // 判断是否是初始值的那个特殊对象
         if (value != InternalThreadLocalMap.UNSET) {
             InternalThreadLocalMap threadLocalMap = InternalThreadLocalMap.get();
             if (setKnownNotUnset(threadLocalMap, value)) {
@@ -268,11 +269,14 @@ public class FastThreadLocal<V> {
             return;
         }
 
+        // 把当前索引设置为UNSET
         Object v = threadLocalMap.removeIndexedVariable(index);
         removeFromVariablesToRemove(threadLocalMap, this);
 
+        //如果原来的对象不是UNSET(正常的对象)
         if (v != InternalThreadLocalMap.UNSET) {
             try {
+                //可自己覆写实现的方法
                 onRemoval((V) v);
             } catch (Exception e) {
                 PlatformDependent.throwException(e);

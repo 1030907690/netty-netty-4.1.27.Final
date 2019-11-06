@@ -66,7 +66,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     }
 
     /***
-     * 获取fastThreadLocal定义的ThreadLocalMap对象
+     * 获取fastThreadThreadLocalMap对象
      * */
     public static InternalThreadLocalMap get() {
         Thread thread = Thread.currentThread();
@@ -303,6 +303,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
             lookup[index] = value;
             return oldValue == UNSET;
         } else {
+            // 扩容
             expandIndexedVariableTableAndSet(index, value);
             return true;
         }

@@ -24,18 +24,24 @@ Error:java: Compilation failed: internal java compiler error
 #### 二、问题总结
 - 1、NioEventLoop总结
   - 默认情况下netty服务端启动多少个线程?何时启动?
-  > 默认cpu核心数 * 2倍线程数;判断是否在本线程,如果是表示已启动,如果不是调用doStartThread方法启动。
+  	> 默认cpu核心数 * 2倍线程数;判断是否在本线程,如果是表示已启动,如果不是调用doStartThread方法启动。
   - netty如何解决空轮询bug?
-  > 判断select所花费的时间,如果是很快执行完,这样的现象如果达到512次(默认的次数),则重建一个select,把旧的select有效属性赋值到新的select,最后替换select。
+  	> 判断select所花费的时间,如果是很快执行完,这样的现象如果达到512次(默认的次数),则重建一个select,把旧的select有效属性赋值到新的select,最后替换select。
   - netty如何保证异步串行无锁化?
-  > 通过inEventLoop()判断如果是外部线程,则把操作封装成task放到MpscQueue里,后面会被挨个执行。
+  	> 通过inEventLoop()判断如果是外部线程,则把操作封装成task放到MpscQueue里,后面会被挨个执行。
+  
 - 2、netty新连接接入处理总结
   - netty是在哪里检测有新连接接入的?
-  > boos线程轮询出accept事件,通过jdk底层的accept方法创建这条连接。
+  	> boos线程轮询出accept事件,通过jdk底层的accept方法创建这条连接。
   - 新连接是怎样注册到NioEventLoop线程的?
-  > boos线程调用chooser(PowerOfTwoEventExecutorChooser或者GenericEventExecutorChooser)的next方法拿到一个NioEventLoop,将这条连接注册到NioEventLoop的select上去。
+  	> boos线程调用chooser(PowerOfTwoEventExecutorChooser或者GenericEventExecutorChooser)的next方法拿到一个NioEventLoop,将这条连接注册到NioEventLoop的select上去。
   
-  
+- 3、关于内存分配
+  - 内存的类别有哪些?
+  	
+  - 如何减少多线程内存分配之间的竞争?
+  - 不同大小的内存是如何进行分配的?
+
   
   
   
