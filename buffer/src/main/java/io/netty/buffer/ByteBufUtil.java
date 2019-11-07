@@ -70,6 +70,7 @@ public final class ByteBufUtil {
     static final ByteBufAllocator DEFAULT_ALLOCATOR;
 
     static {
+        // 根据平台选择池化还是非池化的内存分配器
         String allocType = SystemPropertyUtil.get(
                 "io.netty.allocator.type", PlatformDependent.isAndroid() ? "unpooled" : "pooled");
         allocType = allocType.toLowerCase(Locale.US).trim();

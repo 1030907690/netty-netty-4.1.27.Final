@@ -42,11 +42,25 @@ Error:java: Compilation failed: internal java compiler error
   - 如何减少多线程内存分配之间的竞争?
   - 不同大小的内存是如何进行分配的?
 
+
+
+### 三、ByteBuf分类
+- Pooled和Unpooled
+- Unsafe和非Unsafe;Unsafe依赖jdk的Unsafe对象，非Unsafe不依赖
+- Heap和Direct；Heap依赖底层数组,Direct依赖于DirectByteBuffer对象
+  
+  
+#### 四、ByteBufAllocator分析
+- ByteBufAllocator功能
+- AbstractByteBufAllocator
+- ByteBufAllocator两大子类(PooledByteBufAllocator、UnPooledByteBufAllocator)
   
   
   
-  
-  
+- directArena分配direct内存的流程
+  - 从对象池里面拿到PooledByteBuf进行复用
+  - 从缓存上进行内存分配
+  - 从内存堆里面进行内存分配
   
   
 # Netty Project

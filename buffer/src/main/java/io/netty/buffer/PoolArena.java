@@ -151,7 +151,9 @@ abstract class PoolArena<T> implements PoolArenaMetric {
     abstract boolean isDirect();
 
     PooledByteBuf<T> allocate(PoolThreadCache cache, int reqCapacity, int maxCapacity) {
+        // 从对象池里面拿到PooledByteBuf进行复用
         PooledByteBuf<T> buf = newByteBuf(maxCapacity);
+        // 从缓存上进行内存分配
         allocate(cache, buf, reqCapacity);
         return buf;
     }
@@ -187,6 +189,7 @@ abstract class PoolArena<T> implements PoolArenaMetric {
             PoolSubpage<T>[] table;
             boolean tiny = isTiny(normCapacity);
             if (tiny) { // < 512
+                // 不管进入哪段逻辑 首先尝试在缓存上进行内存分配 如果成功 return
                 if (cache.allocateTiny(this, buf, reqCapacity, normCapacity)) {
                     // was able to allocate out of the cache so move on
                     return;
@@ -194,6 +197,7 @@ abstract class PoolArena<T> implements PoolArenaMetric {
                 tableIdx = tinyIdx(normCapacity);
                 table = tinySubpagePools;
             } else {
+                // 不管进入哪段逻辑 首先尝试在缓存上进行内存分配 如果成功 return
                 if (cache.allocateSmall(this, buf, reqCapacity, normCapacity)) {
                     // was able to allocate out of the cache so move on
                     return;
@@ -208,6 +212,7 @@ abstract class PoolArena<T> implements PoolArenaMetric {
              * Synchronize on the head. This is needed as {@link PoolChunk#allocateSubpage(int)} and
              * {@link PoolChunk#free(long)} may modify the doubly linked list as well.
              */
+            // 如果在缓存上没分配成功 ，做实际的内存分配
             synchronized (head) {
                 final PoolSubpage<T> s = head.next;
                 if (s != head) {
@@ -227,6 +232,7 @@ abstract class PoolArena<T> implements PoolArenaMetric {
             return;
         }
         if (normCapacity <= chunkSize) {
+            // 不管进入哪段逻辑 首先尝试在缓存上进行内存分配 如果成功 return
             if (cache.allocateNormal(this, buf, reqCapacity, normCapacity)) {
                 // was able to allocate out of the cache so move on
                 return;
@@ -784,6 +790,7 @@ abstract class PoolArena<T> implements PoolArenaMetric {
 
         @Override
         protected PooledByteBuf<ByteBuffer> newByteBuf(int maxCapacity) {
+            // 一般默认为true
             if (HAS_UNSAFE) {
                 return PooledUnsafeDirectByteBuf.newInstance(maxCapacity);
             } else {

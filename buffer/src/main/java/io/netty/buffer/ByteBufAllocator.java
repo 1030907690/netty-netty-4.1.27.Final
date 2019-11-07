@@ -19,6 +19,8 @@ package io.netty.buffer;
  * Implementations are responsible to allocate buffers. Implementations of this interface are expected to be
  * thread-safe.
  */
+
+/*内存分配器*/
 public interface ByteBufAllocator {
 
     ByteBufAllocator DEFAULT = ByteBufUtil.DEFAULT_ALLOCATOR;
@@ -93,6 +95,7 @@ public interface ByteBufAllocator {
      * Allocate a {@link CompositeByteBuf}.
      * If it is a direct or heap buffer depends on the actual implementation.
      */
+    //把堆，堆外合并成CompositeByteBuf
     CompositeByteBuf compositeBuffer();
 
     /**

@@ -24,6 +24,9 @@ import java.nio.ByteBuffer;
 /**
  * Simplistic {@link ByteBufAllocator} implementation that does not pool anything.
  */
+/*
+* 非池分配器
+* */
 public final class UnpooledByteBufAllocator extends AbstractByteBufAllocator implements ByteBufAllocatorMetricProvider {
 
     private final UnpooledByteBufAllocatorMetric metric = new UnpooledByteBufAllocatorMetric();
@@ -79,6 +82,7 @@ public final class UnpooledByteBufAllocator extends AbstractByteBufAllocator imp
 
     @Override
     protected ByteBuf newHeapBuffer(int initialCapacity, int maxCapacity) {
+        // 判断是否有Unsafe 做不同的处理
         return PlatformDependent.hasUnsafe() ?
                 new InstrumentedUnpooledUnsafeHeapByteBuf(this, initialCapacity, maxCapacity) :
                 new InstrumentedUnpooledHeapByteBuf(this, initialCapacity, maxCapacity);

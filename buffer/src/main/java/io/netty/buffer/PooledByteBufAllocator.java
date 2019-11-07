@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/*池分配器*/
 public class PooledByteBufAllocator extends AbstractByteBufAllocator implements ByteBufAllocatorMetricProvider {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(PooledByteBufAllocator.class);
@@ -83,12 +84,14 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
          */
         final int defaultMinNumArena = NettyRuntime.availableProcessors() * 2;
         final int defaultChunkSize = DEFAULT_PAGE_SIZE << DEFAULT_MAX_ORDER;
+        //默认heapArena的大小  默认是CPU核数 * 2
         DEFAULT_NUM_HEAP_ARENA = Math.max(0,
                 SystemPropertyUtil.getInt(
                         "io.netty.allocator.numHeapArenas",
                         (int) Math.min(
                                 defaultMinNumArena,
                                 runtime.maxMemory() / defaultChunkSize / 2 / 3)));
+        // 默认DirectArena的大小    默认是CPU核数 * 2
         DEFAULT_NUM_DIRECT_ARENA = Math.max(0,
                 SystemPropertyUtil.getInt(
                         "io.netty.allocator.numDirectArenas",
@@ -299,7 +302,9 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
 
     @Override
     protected ByteBuf newHeapBuffer(int initialCapacity, int maxCapacity) {
+        // 拿到线程局部缓存
         PoolThreadCache cache = threadCache.get();
+        // 在线程局部缓存的Area上进行内存分配
         PoolArena<byte[]> heapArena = cache.heapArena;
 
         final ByteBuf buf;
@@ -316,7 +321,9 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
 
     @Override
     protected ByteBuf newDirectBuffer(int initialCapacity, int maxCapacity) {
+         // 拿到线程局部缓存
         PoolThreadCache cache = threadCache.get();
+        // 在线程局部缓存的Area上进行内存分配
         PoolArena<ByteBuffer> directArena = cache.directArena;
 
         final ByteBuf buf;
@@ -432,8 +439,9 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
 
         @Override
         protected synchronized PoolThreadCache initialValue() {
-            final PoolArena<byte[]> heapArena = leastUsedArena(heapArenas);
-            final PoolArena<ByteBuffer> directArena = leastUsedArena(directArenas);
+            // 拿到使用最少的Arena
+            final PoolArena<byte[]> heapArena = leastUsedArena(heapArenas); //堆
+            final PoolArena<ByteBuffer> directArena = leastUsedArena(directArenas); //堆外
 
             Thread current = Thread.currentThread();
             if (useCacheForAllThreads || current instanceof FastThreadLocalThread) {
