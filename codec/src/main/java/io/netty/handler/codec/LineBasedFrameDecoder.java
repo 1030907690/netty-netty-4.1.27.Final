@@ -27,16 +27,24 @@ import java.util.List;
  * Both {@code "\n"} and {@code "\r\n"} are handled.
  * For a more general delimiter-based decoder, see {@link DelimiterBasedFrameDecoder}.
  */
+/**
+ * 行解码器
+ * */
 public class LineBasedFrameDecoder extends ByteToMessageDecoder {
 
     /** Maximum length of a frame we're willing to decode.  */
+    // 最大接受长度
     private final int maxLength;
     /** Whether or not to throw an exception as soon as we exceed maxLength. */
+    // 超过长度是否应该立即抛出异常  true 立即抛出异常
     private final boolean failFast;
+    // 解析出的数据包带不带换行符 true 不带  true 带
     private final boolean stripDelimiter;
 
     /** True if we're discarding input because we're already over maxLength.  */
+    // 是否处于丢弃默认   true  是丢弃模式
     private boolean discarding;
+    // 已丢弃多少字节
     private int discardedBytes;
 
     /** Last scan position. */
@@ -90,6 +98,7 @@ public class LineBasedFrameDecoder extends ByteToMessageDecoder {
      *                          be created.
      */
     protected Object decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
+        // 找到换行符的位置
         final int eol = findEndOfLine(buffer);
         if (!discarding) {
             if (eol >= 0) {

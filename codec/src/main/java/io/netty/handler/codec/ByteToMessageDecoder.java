@@ -76,6 +76,7 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
         @Override
         public ByteBuf cumulate(ByteBufAllocator alloc, ByteBuf cumulation, ByteBuf in) {
             final ByteBuf buffer;
+            // 判断容量是否足够  是否需要扩容
             if (cumulation.writerIndex() > cumulation.maxCapacity() - in.readableBytes()
                     || cumulation.refCnt() > 1 || cumulation.isReadOnly()) {
                 // Expand cumulation (by replace it) when either there is not more room in the buffer
@@ -85,6 +86,7 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
                 // See:
                 // - https://github.com/netty/netty/issues/2327
                 // - https://github.com/netty/netty/issues/1764
+                // 扩容
                 buffer = expandCumulation(alloc, cumulation, in.readableBytes());
             } else {
                 buffer = cumulation;
@@ -250,16 +252,25 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
      */
     protected void handlerRemoved0(ChannelHandlerContext ctx) throws Exception { }
 
+
+    /*
+    * 1、累加字节流
+    * 2、调用子类的decode方法解析
+    * 3、将解析到的ByteBuf向下传播
+    * */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof ByteBuf) {
             CodecOutputList out = CodecOutputList.newInstance();
             try {
                 ByteBuf data = (ByteBuf) msg;
+                // 如果当前累加器等于null  说明是第一次从io流里读取数据
                 first = cumulation == null;
                 if (first) {
+                    // 第一次直接赋值
                     cumulation = data;
                 } else {
+                    // 累加器 累加  累加字节流
                     cumulation = cumulator.cumulate(ctx.alloc(), cumulation, data);
                 }
                 callDecode(ctx, cumulation, out);
@@ -281,10 +292,13 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
 
                 int size = out.size();
                 decodeWasNull = !out.insertSinceRecycled();
+                //向下传播
                 fireChannelRead(ctx, out, size);
+                // 回收
                 out.recycle();
             }
         } else {
+            // 如果不是ByteBuf类型的直接向下传播
             ctx.fireChannelRead(msg);
         }
     }
@@ -407,11 +421,15 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
      */
     protected void callDecode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
         try {
+            // 如果累加器类有数据
             while (in.isReadable()) {
                 int outSize = out.size();
 
+                // 判断list里是否有对象
                 if (outSize > 0) {
+                    // 传播
                     fireChannelRead(ctx, out, outSize);
+                    // 清理
                     out.clear();
 
                     // Check if this handler was removed before continuing with decoding.
@@ -419,6 +437,8 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
                     //
                     // See:
                     // - https://github.com/netty/netty/issues/4635
+                    //在继续解码之前，请检查此处理程序是否已删除。
+                    //如果已将其移除，则继续在缓冲区上操作是不安全的。
                     if (ctx.isRemoved()) {
                         break;
                     }
@@ -436,6 +456,7 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
                     break;
                 }
 
+                // 还是和之前一样的size 说明没有从其他的解码器中解析出新的对象
                 if (outSize == out.size()) {
                     if (oldInputLength == in.readableBytes()) {
                         break;
@@ -444,12 +465,14 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
                     }
                 }
 
+                // 没有从当前累加器读取数据但是最终decoded出一个message 有问题 抛异常
                 if (oldInputLength == in.readableBytes()) {
                     throw new DecoderException(
                             StringUtil.simpleClassName(getClass()) +
                                     ".decode() did not read anything but decoded a message.");
                 }
 
+                // 读一次数据只解析异常
                 if (isSingleDecode()) {
                     break;
                 }
@@ -487,6 +510,7 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
             throws Exception {
         decodeState = STATE_CALLING_CHILD_DECODE;
         try {
+            // 调用子类的decode方法
             decode(ctx, in, out);
         } finally {
             boolean removePending = decodeState == STATE_HANDLER_REMOVED_PENDING;

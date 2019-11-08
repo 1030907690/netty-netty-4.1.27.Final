@@ -341,7 +341,10 @@ public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
     @Override
     protected final void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         Object decoded = decode(ctx, in);
+
+        // 判断是否解析到对象
         if (decoded != null) {
+            // 如果已解析到对象 把对象添加到list
             out.add(decoded);
         }
     }
