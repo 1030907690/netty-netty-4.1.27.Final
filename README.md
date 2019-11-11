@@ -38,11 +38,13 @@ Error:java: Compilation failed: internal java compiler error
   
 - 3、关于内存分配
   - 内存的类别有哪些?
-  	
+    - Heap和Direct、Unsafe和非Unsafe、Pooled和Unpooled
   - 如何减少多线程内存分配之间的竞争?
+    ![减少线程竞争](thread_compete.png)
+    - 每个线程管理一个Area，相互不受影响(ThreadLocal的原理)
   - 不同大小的内存是如何进行分配的?
-
-
+    - page、SubPage等等
+    
 
 ### 三、ByteBuf分类
 - Pooled和Unpooled
