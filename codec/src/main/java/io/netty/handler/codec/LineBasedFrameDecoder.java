@@ -100,33 +100,51 @@ public class LineBasedFrameDecoder extends ByteToMessageDecoder {
     protected Object decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
         // 找到换行符的位置
         final int eol = findEndOfLine(buffer);
+        // 首次为false
         if (!discarding) {
+            //如果已经找到
             if (eol >= 0) {
                 final ByteBuf frame;
+                // 拿到分给符之前的长度
                 final int length = eol - buffer.readerIndex();
+                // 如果是\r 结尾 delimLength 为2
                 final int delimLength = buffer.getByte(eol) == '\r'? 2 : 1;
 
+                // 如果每行数据长度大于最大接受长度
                 if (length > maxLength) {
+                    // 进行丢弃
+
+                    // 把readerIndex移动到下一个可读的地方
                     buffer.readerIndex(eol + delimLength);
+                    // 丢弃 传播异常
                     fail(ctx, length);
                     return null;
                 }
 
+                // 是否要把分给符算在数据包里 true 不算在里面
                 if (stripDelimiter) {
+                    //移动读指针
                     frame = buffer.readRetainedSlice(length);
+                    //跳过分隔符的长度
                     buffer.skipBytes(delimLength);
                 } else {
                     frame = buffer.readRetainedSlice(length + delimLength);
                 }
 
                 return frame;
-            } else {
+            } else { // 如果没有找到换行符
+
                 final int length = buffer.readableBytes();
+                // 如果长度超过最大能解析的长度
                 if (length > maxLength) {
+                    // 标记被丢弃的字节
                     discardedBytes = length;
+                    // 把读指针移动到写指针
                     buffer.readerIndex(buffer.writerIndex());
+                    //标记进入丢弃模式
                     discarding = true;
                     offset = 0;
+                    // 是否立即抛出异常   立即触发的
                     if (failFast) {
                         fail(ctx, "over " + discardedBytes);
                     }
@@ -134,19 +152,29 @@ public class LineBasedFrameDecoder extends ByteToMessageDecoder {
                 return null;
             }
         } else {
+            // 如果找到分隔符
             if (eol >= 0) {
+                //  前面已丢弃的字节数(discardedBytes)   加上这次要丢弃的字节(eol - buffer.readerIndex())
                 final int length = discardedBytes + eol - buffer.readerIndex();
+                //  分割符长度   如果是 \r\n 就是2  \n是1
                 final int delimLength = buffer.getByte(eol) == '\r'? 2 : 1;
+                // 移动读指针
                 buffer.readerIndex(eol + delimLength);
+                // 标记没有丢弃
                 discardedBytes = 0;
+                // 关闭丢弃模式
                 discarding = false;
+                // 是否立即抛出异常  把所有字节丢弃后才触发
                 if (!failFast) {
                     fail(ctx, length);
                 }
             } else {
+                // 标记被丢弃的字节
                 discardedBytes += buffer.readableBytes();
+                // 把读指针移动到写指针
                 buffer.readerIndex(buffer.writerIndex());
             }
+            // 丢弃模式没有解析到数据包
             return null;
         }
     }
@@ -170,6 +198,7 @@ public class LineBasedFrameDecoder extends ByteToMessageDecoder {
         int i = buffer.forEachByte(buffer.readerIndex() + offset, totalLength - offset, ByteProcessor.FIND_LF);
         if (i >= 0) {
             offset = 0;
+            // 前面一个字节是\r
             if (i > 0 && buffer.getByte(i - 1) == '\r') {
                 i--;
             }

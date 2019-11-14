@@ -185,14 +185,23 @@ public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
 
     private final ByteOrder byteOrder;
     private final int maxFrameLength;
+    // 偏移量
     private final int lengthFieldOffset;
+    // 偏移量 + lengthFieldLength 是你的长度
     private final int lengthFieldLength;
+    //数据包结尾长度
     private final int lengthFieldEndOffset;
+    //  长度与的长度+ 这个值   ； 特殊的加一些字节
     private final int lengthAdjustment;
+    // 是否需要跳过字节数
     private final int initialBytesToStrip;
+    // 快速失败
     private final boolean failFast;
+    // 是否是丢弃模式
     private boolean discardingTooLongFrame;
+    // 很长Frame记录
     private long tooLongFrameLength;
+    // 丢弃的字节
     private long bytesToDiscard;
 
     /**
@@ -375,6 +384,7 @@ public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
     }
 
     private void exceededFrameLength(ByteBuf in, long frameLength) {
+        // 当前可读字节进行丢弃
         long discard = frameLength - in.readableBytes();
         tooLongFrameLength = frameLength;
 
@@ -383,7 +393,9 @@ public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
             in.skipBytes((int) frameLength);
         } else {
             // Enter the discard mode and discard everything received so far.
+            //  设置为丢弃模式
             discardingTooLongFrame = true;
+            //记录丢弃的字节
             bytesToDiscard = discard;
             in.skipBytes(in.readableBytes());
         }
@@ -407,48 +419,69 @@ public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
      * @return  frame           the {@link ByteBuf} which represent the frame or {@code null} if no frame could
      *                          be created.
      */
+
+
+    /***
+     * 基于长度解码器步骤
+     * 1、计算需要抽取的数据包长度
+     * 2、跳过字节逻辑处理
+     * 3、丢弃模式下的处理
+     * */
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
         if (discardingTooLongFrame) {
             discardingTooLongFrame(in);
         }
 
+        // 如果当前读取的字节流小于数据包结尾长度
         if (in.readableBytes() < lengthFieldEndOffset) {
             return null;
         }
 
+
+        // 实际偏移量
         int actualLengthFieldOffset = in.readerIndex() + lengthFieldOffset;
         long frameLength = getUnadjustedFrameLength(in, actualLengthFieldOffset, lengthFieldLength, byteOrder);
 
         if (frameLength < 0) {
+            // 如果小于0 不合法抛出异常
             failOnNegativeLengthField(in, frameLength, lengthFieldEndOffset);
         }
-
+        // 调整偏移量  +  数据包长度
         frameLength += lengthAdjustment + lengthFieldEndOffset;
 
         if (frameLength < lengthFieldEndOffset) {
             failOnFrameLengthLessThanLengthFieldEndOffset(in, frameLength, lengthFieldEndOffset);
         }
 
+        // 抽取的数据包长度 大于 最大接收长度
         if (frameLength > maxFrameLength) {
+            // 进行丢弃模式处理
             exceededFrameLength(in, frameLength);
             return null;
         }
 
         // never overflows because it's less than maxFrameLength
         int frameLengthInt = (int) frameLength;
+        // 可读数据小于收集的数据长度
         if (in.readableBytes() < frameLengthInt) {
+            // 可能是不完整的数据包
             return null;
         }
 
+        // 跳过字节大于需要解析的数据包
         if (initialBytesToStrip > frameLengthInt) {
             failOnFrameLengthLessThanInitialBytesToStrip(in, frameLength, initialBytesToStrip);
         }
+        // 跳过字节
         in.skipBytes(initialBytesToStrip);
 
         // extract frame
         int readerIndex = in.readerIndex();
+        //计算偏移量
         int actualFrameLength = frameLengthInt - initialBytesToStrip;
+        // 抽取字节
         ByteBuf frame = extractFrame(ctx, in, readerIndex, actualFrameLength);
+        // 读指针往后移
         in.readerIndex(readerIndex + actualFrameLength);
         return frame;
     }
